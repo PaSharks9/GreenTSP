@@ -5,9 +5,12 @@ class Cliente:
     def __init__(self,x,y,dizionario_stazioni,n):
         # Fintanto che le stazioni le lascio in mezzo ai quadranti, le stazioni più vicine ad ogni cliente è la stazione del proprio quadrante
         self.numero= n
+
         self.coordinate= []
         self.coordinate.append(x)
         self.coordinate.append(y)
+
+        #
         if x >= 0 and y >= 0:
             coordinate_stazione= dizionario_stazioni.get(1) 
             self.distanza_stazione= euclidean_distance(coordinate_stazione,self.coordinate)
@@ -21,14 +24,17 @@ class Cliente:
             coordinate_stazione= dizionario_stazioni.get(4)
             self.distanza_stazione= euclidean_distance(coordinate_stazione,self.coordinate)
 
+        self.distanza_deposito= euclidean_distance(self.coordinate, [0,0])
+
+
     def get_quadrant(self):
         if self.coordinate[0] >= 0 and self.coordinate[1] >= 0:
             return 1
-        elif self.coordinate[0] >= 0 and self.coordinate[1] >= 0:
+        elif self.coordinate[0] >= 0 and self.coordinate[1] < 0:
             return 2
-        elif self.coordinate[0] >= 0 and self.coordinate[1] >= 0: 
+        elif self.coordinate[0] <= 0 and self.coordinate[1] < 0: 
             return 3
-        elif self.coordinate[0] >= 0 and self.coordinate[1] >= 0:
+        elif self.coordinate[0] <= 0 and self.coordinate[1] > 0:
             return 4
 
 

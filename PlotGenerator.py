@@ -48,6 +48,6 @@ def draw_map(dizionario_citta, dizionario_stazioni, Max_Axis):
     plt.legend(bbox_to_anchor=(0,1.02,1,0.2), loc="lower left", ncol=3)
     plt.grid(True)
 
-    # plt.savefig('TSPMap.jpg')
+    plt.savefig('TSPMap.jpg')
 
     plt.show()
