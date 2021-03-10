@@ -25,9 +25,9 @@ def draw_map(dizionario_citta, dizionario_stazioni, Max_Axis):
 
     # Disegno i punti
     for key in pointsCity_List:
-        coordinate= dizionario_citta.get(key)
-        x_city_coordinates.append(coordinate[0])
-        y_city_coordinates.append(coordinate[1])
+        cliente= dizionario_citta.get(key)
+        x_city_coordinates.append(cliente.coordinate[0])
+        y_city_coordinates.append(cliente.coordinate[1])
 
     plt.scatter(x_city_coordinates, y_city_coordinates, s=20, edgecolors='none', c='green', label="Cliente")
 
