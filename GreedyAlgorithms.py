@@ -14,6 +14,23 @@ def euclidean_distance(A,B):
 
     return d
 
+
+
+
+# Conta il numero di città visitate
+def calcola_citta_visitate(percorso,dizionario_citta):
+    citta= list(dizionario_citta.keys())
+
+    n_citta_visitate= 0
+
+    for key in citta:
+        if key in percorso:
+            n_citta_visitate += 1
+
+    return n_citta_visitate
+
+
+# Per NearestNeighbour
 def find_next_node(percorso,current_node,dizionario_citta,dizionario_stazioni):
     min_dist= 10000000
 
@@ -46,20 +63,7 @@ def find_next_node(percorso,current_node,dizionario_citta,dizionario_stazioni):
     return next_node, min_dist
 
 
-# Conta il numero di città visitate
-def calcola_citta_visitate(percorso,dizionario_citta):
-    citta= list(dizionario_citta.keys())
-
-    n_citta_visitate= 0
-
-    for key in citta:
-        if key in percorso:
-            n_citta_visitate += 1
-
-    return n_citta_visitate
-
 # Tempo di ricarica è dato da 0.25 unita di tempo per unita metrica di autonomia ricaricata
-
 def NearestNeighbour(dizionario_citta, dizionario_stazioni, deposito, k, N_CITIES):
     tempo_ricarica= 0  #Tempo speso a ricaricare
     distanza_percorsa= 0
@@ -189,5 +193,5 @@ def NearestNeighbour(dizionario_citta, dizionario_stazioni, deposito, k, N_CITIE
 
     tempo_totale= round(tempo_totale,2)
     distanza_percorsa= round(distanza_percorsa,2)
-    
+
     return percorso, distanza_percorsa, tempo_totale, tempo_ricarica
