@@ -58,7 +58,7 @@ def draw_map(percorso, dizionario_citta, dizionario_stazioni, Max_Axis):
     # Disegno il deposito che si trova in coordinate [0,0]
     plt.scatter(0,0,s=50, edgecolors='none', c='blue', label="Deposito")
 
-    plt.savefig('img/TSPMap.jpg')
+    plt.savefig('img/NearestNeighbour/TSPMap.jpg')
 
     
     # ------------------------- Disegno del Tour -------------------------
@@ -108,6 +108,78 @@ def draw_map(percorso, dizionario_citta, dizionario_stazioni, Max_Axis):
 
     plt.grid(True)
 
-    plt.savefig('img/TSPMap_Tour')
+    plt.savefig('img/NearestNeighbour/NearestNeighbour_GreenTSP.jpg')
     plt.show()
 
+
+def draw_mst(dizionario_citta, Max_Axis, archi_usati):
+
+    # -------------------- INIZIALIZZO GRAFICO --------------------
+    plt.title('MST Cities-Map')
+    plt.grid(True)
+
+    pointsCity_List= list(dizionario_citta.keys())
+
+    # Do valori agli assi cartesiani
+    plt.axis([-Max_Axis-1, Max_Axis+1, -Max_Axis-1, Max_Axis+1])
+
+    plt.xticks([1*k for k in range(-Max_Axis,Max_Axis+1)])
+    plt.yticks([1*k for k in range(-Max_Axis,Max_Axis+1)])
+    # Creo i 4 quadranti disegnando semplicemente la retta verticale e la retta orizzontale
+    plt.axvline(0,0,color='black')
+
+    plt.axhline(0,0,color='black')
+
+    x_city_coordinates=[]
+    y_city_coordinates=[]
+
+
+    #-------------------- Disegno i punti --------------------
+    for key in pointsCity_List:
+        cliente= dizionario_citta.get(key)
+        x_city_coordinates.append(cliente.coordinate[0])
+        y_city_coordinates.append(cliente.coordinate[1])
+
+    plt.scatter(x_city_coordinates, y_city_coordinates, s=20, edgecolors='none', c='green', label="Cliente")
+    # Do i nomi ai punti
+    for key in pointsCity_List:
+        plt.annotate(str(key), (x_city_coordinates[key - 1],y_city_coordinates[key - 1]))
+
+    #Do il nome al deposito
+    plt.annotate('D', (0,0))
+
+    # Disegno il deposito che si trova in coordinate [0,0]
+    plt.scatter(0,0,s=50, edgecolors='none', c='blue', label="Deposito")
+
+    plt.savefig('img/Christofides/MST_CitiesMap.jpg')
+
+    #-------------------- Disegno semirette --------------------
+    i = 0
+    for edge in archi_usati:
+        nodo1= edge[0]
+        nodo2= edge[1]
+        distanza= edge[2]
+
+        if nodo1 != 0:
+            nodo_1= dizionario_citta.get(int(nodo1))
+            coordinate1= nodo_1.coordinate
+        else:
+            coordinate1= [0,0]
+
+        if nodo2 != 0:
+            nodo_2= dizionario_citta.get(int(nodo2))
+            coordinate2= nodo_2.coordinate
+        else:
+            coordinate2= [0,0]
+        
+        
+        plt.plot([coordinate1[0],coordinate2[0]],[coordinate1[1],coordinate2[1]], color='blue', label=distanza)
+        
+        
+        directory= "img/Christofides/"
+        filename= "MST_Map_" + str(i) + ".jpg"
+
+        plt.savefig(directory+filename)
+        i += 1
+    
+    # plt.savefig('img/Christofides/MST_Map.jpg')
