@@ -1,7 +1,7 @@
 import math
 from InstanceGenerator import generateInstance, euclidean_distance, manualInstance
-from PlotGenerator import draw_map, draw_mst
-from ConstructiveEuristic import NearestNeighbour, MinimumSpanningTree
+from PlotGenerator import draw_map
+from ConstructiveEuristic import NearestNeighbour, MinimumSpanningTree, Christofides_Algorithm
 
 
 def print_mst(dizionario_distanze_citta, dizionario_uso_archi, distanza_mst, archi_usati):
@@ -67,9 +67,10 @@ if __name__ == "__main__":
         k= int(input("L'autonomia minima possibile è: " + str(autonomia_minima) + "\nInserire autonomia auto: "))
 
 
+    print("------------------------------------ Menu Scelta Istanze ------------------------------------ ")
     scelta_istanze= 0
     while scelta_istanze not in range(1,3):
-        print("Menu scelta istanze: \n 1- Generare istanza randomicamente\n 2- Inserire manualmente dati istanza")
+        print("\n 1- Generare istanza randomicamente\n 2- Inserire manualmente dati istanza")
         scelta_istanze= int(input("\nDigitare scelta: "))
 
     if scelta_istanze == 1:
@@ -80,11 +81,11 @@ if __name__ == "__main__":
     deposito= 0
 
 
-    dizionario_distanze_citta, dizionario_uso_archi, distanza_mst, archi_usati= MinimumSpanningTree(dizionario_citta)
-
+    #dizionario_distanze_citta, dizionario_uso_archi, distanza_mst, archi_usati= MinimumSpanningTree(dizionario_citta)
     percorso, distanza_percorsa, tempo_totale, tempo_ricarica= NearestNeighbour(dizionario_citta,dizionario_stazioni,deposito,k,N_CITIES)
 
-
+    Christofides_Algorithm(dizionario_citta, dizionario_stazioni, Max_Axis)
+    
     scelta_stampe= 1
     while scelta_stampe != 0:
 
@@ -97,13 +98,22 @@ if __name__ == "__main__":
     # Stampo i risultati
         if scelta_stampe == 1:
             print_nearest_neighbour(percorso, distanza_percorsa, tempo_totale, tempo_ricarica)
-        elif scelta_stampe == 2:
-            print_mst(dizionario_distanze_citta, dizionario_uso_archi, distanza_mst, archi_usati)
+        #elif scelta_stampe == 2:
+        # print_mst(dizionario_distanze_citta, dizionario_uso_archi, distanza_mst, archi_usati)
         elif scelta_stampe == 0:
             break
 
-# Creo le immagini
 
+
+
+
+
+
+
+    
+    
+    #print("subgraph_keys: " + str(subgraph_keys))
+# Creo le immagini
+    # Disegna NearestNeighbour
     draw_map(percorso, dizionario_citta, dizionario_stazioni, Max_Axis)
 
-    draw_mst(dizionario_citta, Max_Axis, archi_usati)

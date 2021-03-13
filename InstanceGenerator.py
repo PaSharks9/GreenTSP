@@ -68,7 +68,6 @@ def generateInstance(Max_Axis,N_CITIES):
     return dizionario_citta, dizionario_stazioni, deposito_list
 
 
-
 def manualInstance(Max_Axis,N_CITIES):
     
     dizionario_citta= {}

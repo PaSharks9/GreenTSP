@@ -1,7 +1,10 @@
 import matplotlib.pyplot as plt
 
+
 def draw_map(percorso, dizionario_citta, dizionario_stazioni, Max_Axis):
-    
+     # -------------------- Creo SubPlot --------------------
+    figNN= plt.figure() 
+    # -------------------- INIZIALIZZO GRAFICO --------------------
     plt.title('GreenTSP Map')
     plt.grid(True)
 
@@ -109,11 +112,12 @@ def draw_map(percorso, dizionario_citta, dizionario_stazioni, Max_Axis):
     plt.grid(True)
 
     plt.savefig('img/NearestNeighbour/NearestNeighbour_GreenTSP.jpg')
-    plt.show()
 
+    plt.close(figNN)
 
 def draw_mst(dizionario_citta, Max_Axis, archi_usati):
-
+    # -------------------- Creo SubPlot --------------------
+    figMST= plt.figure()
     # -------------------- INIZIALIZZO GRAFICO --------------------
     plt.title('MST Cities-Map')
     plt.grid(True)
@@ -151,7 +155,7 @@ def draw_mst(dizionario_citta, Max_Axis, archi_usati):
     # Disegno il deposito che si trova in coordinate [0,0]
     plt.scatter(0,0,s=50, edgecolors='none', c='blue', label="Deposito")
 
-    plt.savefig('img/Christofides/MST_CitiesMap.jpg')
+    plt.savefig('img/Christofides/MST/MST_CitiesMap.jpg')
 
     #-------------------- Disegno semirette --------------------
     i = 0
@@ -176,10 +180,255 @@ def draw_mst(dizionario_citta, Max_Axis, archi_usati):
         plt.plot([coordinate1[0],coordinate2[0]],[coordinate1[1],coordinate2[1]], color='blue', label=distanza)
         
         
-        directory= "img/Christofides/"
+        """directory= "img/Christofides/MST/"
         filename= "MST_Map_" + str(i) + ".jpg"
 
         plt.savefig(directory+filename)
-        i += 1
+        i += 1"""
     
-    # plt.savefig('img/Christofides/MST_Map.jpg')
+    plt.savefig('img/Christofides/MST/MST_Map.jpg')
+    plt.close(figMST)
+
+def draw_perfect_matching(dizionario_citta, Max_Axis, subgraph, archi_usati):
+
+    # -------------------- Creo SubPlot --------------------
+    figPM= plt.figure()
+
+    # -------------------- INIZIALIZZO GRAFICO --------------------
+    plt.title('PM Cities-Map')
+    plt.grid(True)
+
+    # Do valori agli assi cartesiani
+    plt.axis([-Max_Axis-1, Max_Axis+1, -Max_Axis-1, Max_Axis+1])
+
+    plt.xticks([1*k for k in range(-Max_Axis,Max_Axis+1)])
+    plt.yticks([1*k for k in range(-Max_Axis,Max_Axis+1)])
+    # Creo i 4 quadranti disegnando semplicemente la retta verticale e la retta orizzontale
+    plt.axvline(0,0,color='black')
+
+    plt.axhline(0,0,color='black')
+
+    x_city_coordinates=[]
+    y_city_coordinates=[]
+
+
+    #-------------------- Disegno i punti --------------------
+    for key in subgraph:
+        if key == 0:
+            x_city_coordinates.append(0)
+            y_city_coordinates.append(0)
+        else:
+            cliente= dizionario_citta.get(key)
+            x_city_coordinates.append(cliente.coordinate[0])
+            y_city_coordinates.append(cliente.coordinate[1])
+
+    plt.scatter(x_city_coordinates, y_city_coordinates, s=20, edgecolors='none', c='green', label="Cliente")
+    # Do i nomi ai punti
+    i = 0
+    for key in subgraph:
+        plt.annotate(str(key), (x_city_coordinates[i],y_city_coordinates[i]))
+        i += 1
+
+    plt.savefig('img/Christofides/Perfect_Matching/PM_CitiesMap.jpg')
+
+    #-------------------- Disegno semirette --------------------
+    i = 0
+    for edge in archi_usati:
+        nodo1= edge[0]
+        nodo2= edge[1]
+        distanza= edge[2]
+
+        if nodo1 != 0:
+            nodo_1= dizionario_citta.get(int(nodo1))
+            coordinate1= nodo_1.coordinate
+        else:
+            coordinate1= [0,0]
+
+        if nodo2 != 0:
+            nodo_2= dizionario_citta.get(int(nodo2))
+            coordinate2= nodo_2.coordinate
+        else:
+            coordinate2= [0,0]
+        
+        
+        plt.plot([coordinate1[0],coordinate2[0]],[coordinate1[1],coordinate2[1]], color='blue', label=distanza)
+        
+        
+        """directory= "img/Christofides/Perfect_Matching/"
+        filename= "PM_Map_" + str(i) + ".jpg"
+
+        plt.savefig(directory+filename)
+        i += 1"""
+    
+    plt.savefig('img/Christofides/Perfect_Matching/MST_Map.jpg')
+    plt.close(figPM)
+
+
+
+def draw_Christofides(christofides_graph_no_recharge, dizionario_citta, Max_Axis):
+
+    """keys= list(christofides_graph_no_recharge.keys())
+    for key in keys:
+        print(str(key) + ": " + str(christofides_graph_no_recharge.get(int(key))))"""
+
+    # -------------------- Creo SubPlot --------------------
+    figC= plt.figure()
+    # -------------------- INIZIALIZZO GRAFICO --------------------
+
+    plt.title('Christofides Cities-Map')
+    plt.grid(True)
+
+    # Do valori agli assi cartesiani
+    plt.axis([-Max_Axis-1, Max_Axis+1, -Max_Axis-1, Max_Axis+1])
+
+    plt.xticks([1*k for k in range(-Max_Axis,Max_Axis+1)])
+    plt.yticks([1*k for k in range(-Max_Axis,Max_Axis+1)])
+    # Creo i 4 quadranti disegnando semplicemente la retta verticale e la retta orizzontale
+    plt.axvline(0,0,color='black')
+
+    plt.axhline(0,0,color='black')
+
+    x_city_coordinates=[]
+    y_city_coordinates=[]
+
+    #-------------------- Disegno i punti --------------------
+
+    cities= list(dizionario_citta.keys())
+    cities.append(0)
+
+    for key in cities:
+        if key == 0:
+            x_city_coordinates.append(0)
+            y_city_coordinates.append(0)
+        else:
+            cliente= dizionario_citta.get(key)
+            x_city_coordinates.append(cliente.coordinate[0])
+            y_city_coordinates.append(cliente.coordinate[1])
+
+    plt.scatter(x_city_coordinates, y_city_coordinates, s=20, edgecolors='none', c='green', label="Cliente")
+    # Do i nomi ai punti
+    i = 0
+    for key in cities:
+        plt.annotate(str(key), (x_city_coordinates[i],y_city_coordinates[i]))
+        i += 1
+
+    plt.savefig('img/Christofides/Christofides_CitiesMap.jpg')
+
+
+    #-------------------- Disegno semirette --------------------
+
+    i = 0
+    for vertex in cities:
+        edge_v= christofides_graph_no_recharge.get(int(vertex))
+
+        nodes_u= list(edge_v.keys())
+
+        for u in nodes_u:
+ 
+            if vertex != 0:
+                nodo_1= dizionario_citta.get(int(vertex))
+                coordinate1= nodo_1.coordinate
+            else:
+                coordinate1= [0,0]
+
+            if u != 0:
+                nodo_2= dizionario_citta.get(int(u))
+                coordinate2= nodo_2.coordinate
+            else:
+                coordinate2= [0,0]
+        
+            plt.plot([coordinate1[0],coordinate2[0]],[coordinate1[1],coordinate2[1]], color='green')
+        
+            
+        """directory= "img/Christofides/"
+        filename= "Christofides_Map_" + str(i) + ".jpg"
+
+        plt.savefig(directory+filename)
+        i += 1"""
+    directory= "img/Christofides/"
+    filename= "Christofides_Map.jpg" 
+    plt.savefig(directory+filename)
+    plt.close(figC)
+
+
+def draw_multigraph(christofides_graph_no_recharge, dizionario_citta, Max_Axis):
+    """keys= list(christofides_graph_no_recharge.keys())
+    for key in keys:
+        print(str(key) + ": " + str(christofides_graph_no_recharge.get(int(key))))"""
+
+    # -------------------- Creo SubPlot --------------------
+    figC= plt.figure()
+    # -------------------- INIZIALIZZO GRAFICO --------------------
+
+    plt.title('MultiGraph Cities-Map')
+    plt.grid(True)
+
+    # Do valori agli assi cartesiani
+    plt.axis([-Max_Axis-1, Max_Axis+1, -Max_Axis-1, Max_Axis+1])
+
+    plt.xticks([1*k for k in range(-Max_Axis,Max_Axis+1)])
+    plt.yticks([1*k for k in range(-Max_Axis,Max_Axis+1)])
+    # Creo i 4 quadranti disegnando semplicemente la retta verticale e la retta orizzontale
+    plt.axvline(0,0,color='black')
+
+    plt.axhline(0,0,color='black')
+
+    x_city_coordinates=[]
+    y_city_coordinates=[]
+
+    #-------------------- Disegno i punti --------------------
+
+    cities= list(dizionario_citta.keys())
+    cities.append(0)
+
+    for key in cities:
+        if key == 0:
+            x_city_coordinates.append(0)
+            y_city_coordinates.append(0)
+        else:
+            cliente= dizionario_citta.get(key)
+            x_city_coordinates.append(cliente.coordinate[0])
+            y_city_coordinates.append(cliente.coordinate[1])
+
+    plt.scatter(x_city_coordinates, y_city_coordinates, s=20, edgecolors='none', c='green', label="Cliente")
+    # Do i nomi ai punti
+    i = 0
+    for key in cities:
+        plt.annotate(str(key), (x_city_coordinates[i],y_city_coordinates[i]))
+        i += 1
+
+    plt.savefig('img/Christofides/MultiGraph.jpg')
+
+
+    #-------------------- Disegno semirette --------------------
+
+    i = 0
+    for vertex in cities:
+        edge_v= christofides_graph_no_recharge.get(int(vertex))
+        nodes_u= list(edge_v.keys())
+
+        for u in nodes_u:
+            if vertex != 0:
+                nodo_1= dizionario_citta.get(int(vertex))
+                coordinate1= nodo_1.coordinate
+            else:
+                coordinate1= [0,0]
+
+            if u != 0:
+                nodo_2= dizionario_citta.get(int(u))
+                coordinate2= nodo_2.coordinate
+            else:
+                coordinate2= [0,0]
+        
+            plt.plot([coordinate1[0],coordinate2[0]],[coordinate1[1],coordinate2[1]], color='green')
+        
+            
+        """directory= "img/Christofides/"
+        filename= "Christofides_Map_" + str(i) + ".jpg"
+
+        plt.savefig(directory+filename)
+        i += 1"""
+    directory= "img/Christofides/"
+    filename= "MultiGraph.jpg" 
+    plt.savefig(directory+filename)
+    plt.close(figC)

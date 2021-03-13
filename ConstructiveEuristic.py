@@ -1,5 +1,6 @@
 import math
-
+import copy
+from PlotGenerator import draw_mst, draw_perfect_matching, draw_Christofides, draw_multigraph
 
 def euclidean_distance(A,B):
     x_A= A[0]
@@ -14,8 +15,6 @@ def euclidean_distance(A,B):
     d= math.sqrt(x**2 + y**2)
 
     return d
-
-
 
 
 # Conta il numero di città visitate
@@ -247,11 +246,8 @@ def calcola_dizionario_distanze(dizionario_citta):
     dizionario_distanze_citta[0]= lista_distanze_deposito
     return dizionario_distanze_citta
 
-
-
-
 # L'ammissibilità dell' arco trovato qui viene determinata da MinimumSpanningTree
-def ricerca_arco_minimo(dizionario_distanze_citta, dizionario_uso_archi):
+def ricerca_arco_minimo_mst(dizionario_distanze_citta, dizionario_uso_archi):
 
     distanza_minima_arco= 100000000000
     nodo1= -1
@@ -277,8 +273,37 @@ def ricerca_arco_minimo(dizionario_distanze_citta, dizionario_uso_archi):
 
     return distanza_minima_arco, nodo1, nodo2      
 
-# Ritorna True se l'arco minimo selezionato NON crea un ciclo 
+# Differisce dall'arco minimo mst in quanto il dizionario che gli passo è un dizionario di dizionari e non un dizionario di liste
+# Anche qui l'ammissibilità viene verificata dalla funzione che contiene questa
+def ricerca_arco_minimo_perfectMatching(subgraph, archi_usati):
+    nodi= list(subgraph.keys())
 
+    dist_min= 100000000000000
+
+    nodo1= -1
+    nodo2= -1
+
+    for nodo in nodi:
+
+        archi_usati_dizionarioNodo= archi_usati.get(int(nodo))
+
+        altri_nodi= list(archi_usati_dizionarioNodo.keys())
+
+        for key in altri_nodi:
+            if int(archi_usati_dizionarioNodo.get(key)) == 0: # Se è uguale a 0 vuol dire che questo arco non l'ho ancora usato 
+                
+                dizionario_distanze_nodo= subgraph.get(int(nodo))
+
+                peso_arco= int(dizionario_distanze_nodo.get(int(key)))
+
+                if peso_arco <= dist_min:
+                    dist_min= peso_arco
+                    nodo1= int(nodo)
+                    nodo2= int(key)
+
+    return dist_min, nodo1, nodo2
+
+# Ritorna True se l'arco minimo selezionato NON crea un ciclo 
 def verifica_ammissibilita(nodo1,nodo2,dizionario_sottoAlberi):
 
     if len(dizionario_sottoAlberi) == 0:
@@ -346,6 +371,53 @@ def verifica_ammissibilita(nodo1,nodo2,dizionario_sottoAlberi):
         elif insiemeNodo1 == insiemeNodo2:
             return False
 
+def find_odd_degree_verteces(nodi,archi_usati):
+
+    dizionario_incidenze= {}
+
+    odd_degree_verteces_list= []
+
+    for nodo in nodi:
+        occ= 0
+
+        for arco in archi_usati:
+            if nodo == arco[0] or nodo == arco[1]:
+                occ += 1
+
+        dizionario_incidenze[nodo]= occ
+    
+    for nodo in nodi:
+        if int(dizionario_incidenze.get(nodo)) % 2 != 0:   # Se dividendo il numero per due non ho un resto uguale a 0 allora è dispari
+            odd_degree_verteces_list.append(nodo)
+    
+
+    return odd_degree_verteces_list
+
+def find_greater_2_degree_verteces(unione_PM_MST_graph, dizionario_citta):
+
+    greater_2_verteces= []
+
+    nodi_list1= [0]
+    nodi_list2= list(dizionario_citta.keys())
+    nodi_list= nodi_list1 + nodi_list2
+
+    count_list= []
+
+    for node in nodi_list:
+        occ= 0
+        for arco in unione_PM_MST_graph:
+            if node in arco:
+                occ += 1
+        count_list.append(occ)
+
+    i= 0
+    for vertex in count_list:
+        if vertex > 2:
+            greater_2_verteces.append(i)
+        i += 1
+
+    return greater_2_verteces
+
 def MinimumSpanningTree(dizionario_citta):
     # Distanza coperta dal'mst
     distanza_mst= 0
@@ -386,7 +458,7 @@ def MinimumSpanningTree(dizionario_citta):
     # Questo while in combo a calcola_nodi_visitati mi permette di andare a toccare tutti i nodi
     while n_nodi_considerati < len(nodi) or len(dizionario_sottoAlberi) != 1:
 
-        peso_arco, nodo1, nodo2= ricerca_arco_minimo(dizionario_distanze_citta, dizionario_uso_archi)
+        peso_arco, nodo1, nodo2= ricerca_arco_minimo_mst(dizionario_distanze_citta, dizionario_uso_archi)
         
 
 
@@ -397,8 +469,6 @@ def MinimumSpanningTree(dizionario_citta):
 
             # Simemtria nel dizionario degli usi
             lista_distanze_usateN1[int(nodo2)]= 1
-            print("nodo1: " + str(nodo1))
-            print("lista_distanze_usateN2: " + str(lista_distanze_usateN2))
             lista_distanze_usateN2[int(nodo1)]= 1
 
             if nodo1 not in nodi_visitati:
@@ -423,4 +493,388 @@ def MinimumSpanningTree(dizionario_citta):
 
     return dizionario_distanze_citta, dizionario_uso_archi, distanza_mst, archi_usati
 
+def create_induced_subgraph(dizionario_citta, odd_degree_verteces):
+    
+    subgraph= {}
 
+    # Devo creare gli archi che connettono ogni nodo con tutti gli altri
+    for vertice in odd_degree_verteces:
+        dizionario_distanze= {}
+
+        for nodo in odd_degree_verteces:
+            if nodo != vertice:
+                if nodo != 0:
+                    element_nodo= dizionario_citta.get(int(nodo))
+                    coordinate_nodo= element_nodo.coordinate
+                else:
+                    coordinate_nodo= [0,0]
+
+                if vertice != 0:
+                    element_vertice= dizionario_citta.get(int(vertice))
+                    coordinate_vertice= element_vertice.coordinate
+                else:
+                    coordinate_vertice= [0,0]
+
+                distanza_arco= round(euclidean_distance(coordinate_vertice,coordinate_nodo),2)
+                dizionario_distanze[nodo]= distanza_arco
+
+        subgraph[vertice]= dizionario_distanze
+    
+    return subgraph
+
+def find_perfect_matching(subgraph):
+    # Un perfect matching graph è un insieme di archi indipendenti( ovvero che questi archi  non devono condividere vertici in comune ) che vanno a considerare tutti i vertici
+    # Il perfect matching graph che voglio trovare è quello di costo minimo
+
+    perfect_matching= []
+    distanza_perfect_matching= 0
+
+    nodi= list(subgraph.keys())
+
+    # Archi_usati tiene conto gli archi utilizzati
+    archi_usati= {}
+    
+    # nodi_usati tiene traccia della copertura dei nodi
+    nodi_usati= []
+
+    # Inizializzo il dizionario che tiene dietro gli archi utilizzati, stessa procedura usata per creare l'MST
+    for n in nodi:
+        peso_archi= {}
+
+        for i in nodi:
+            if i != n:
+                peso_archi[i]= 0
+
+        archi_usati[n]= peso_archi
+
+    n_nodi_visitati = calcola_nodi_visitati(nodi_usati, nodi)
+
+    while n_nodi_visitati < len(nodi):
+
+        peso_arco_minimo, nodo1, nodo2= ricerca_arco_minimo_perfectMatching(subgraph, archi_usati)
+
+        # Verifico ammissibilità dell'arco minimo, ovvero l'arco deve comprendere due nodi che non sono stati ancora toccati
+        if nodo1 not in nodi_usati and nodo2 not in nodi_usati:
+            nodi_usati.append(nodo1)
+            nodi_usati.append(nodo2)
+
+            # Segno che tale arco è usato
+
+            diz_archi_usati1= archi_usati.get(nodo1)
+            diz_archi_usati1[nodo2]= 1  
+            # Simmetria dell'uso degli archi
+            diz_archi_usati2= archi_usati.get(nodo2)
+            diz_archi_usati2[nodo1]= 1
+        
+            n_nodi_visitati = calcola_nodi_visitati(nodi_usati, nodi)
+
+            perfect_matching.append([nodo1, nodo2, peso_arco_minimo])
+            distanza_perfect_matching += peso_arco_minimo
+
+        else:
+            # Se sono qui significa che almeno uno dei due nodi era gia stato "toccato" da un'altro arco
+            diz_archi_usati1= archi_usati.get(nodo1)
+            diz_archi_usati1[nodo2]= 2  
+            # Simmetria dell'uso degli archi
+            diz_archi_usati2= archi_usati.get(nodo2)
+            diz_archi_usati2[nodo1]= 2
+
+    return perfect_matching, distanza_perfect_matching
+        
+def createDictGraph(perfect_matching_graph, mst_graph, dizionario_citta):
+    
+    dict_multi_graph_s= {}
+    multi_graph_nodes= list(dizionario_citta.keys())
+    multi_graph_nodes.append(0)
+
+    # Inizializzo i nodi nel grafo
+    for node in multi_graph_nodes: 
+        dict_list= {}   
+        dict_multi_graph_s[node]= dict_list
+
+    # Ora devo assegnare i vari archi ai nodi
+    # Archi del Perfect-Matching
+    for edge in perfect_matching_graph:
+        dict_list= dict_multi_graph_s[edge[0]]
+
+        dict_list_nodes= list(dict_list.keys())
+
+        # Se un arco tra i due nodi esiste gia, faccio l'append e aggiungo la distanza del secondo arco ( che dovrebbe avere distanza uguale ) 
+        if edge[1] in dict_list_nodes:
+            dict_list[edge[1]].append(int(round(edge[2],0)))
+        else:
+            # Se un arco tra i due nodi non esiste, creo una lista con la distanza di un arco soltanto
+            distanza= [edge[2]]
+            dict_list[edge[1]]= distanza
+
+        # Devo fare il simmetrico
+        dict_list2= dict_multi_graph_s[edge[1]]
+        dict_list_nodes2= list(dict_list2.keys())
+
+        if edge[0] in dict_list_nodes2:
+            dict_list2[edge[0]].append(int(round(edge[2],0)))
+        else:
+            # Se un arco tra i due nodi non esiste, creo una lista con la distanza di un arco soltanto
+            distanza= [edge[2]]
+            dict_list2[edge[0]]= distanza
+
+    # Archi del MST
+    for edge in mst_graph:
+        dict_list= dict_multi_graph_s[edge[0]]
+
+        dict_list_nodes= list(dict_list.keys())
+
+        # Se un arco tra i due nodi esiste gia, faccio l'append e aggiungo la distanza del secondo arco ( che dovrebbe avere distanza uguale ) 
+        if edge[1] in dict_list_nodes:
+            dict_list[edge[1]].append(int(round(edge[2],0)))
+        else:
+            # Se un arco tra i due nodi non esiste, creo una lista con la distanza di un arco soltanto
+            distanza= [int(round(edge[2],0))]
+            dict_list[edge[1]]= distanza
+
+        # Devo fare il simmetrico
+        dict_list2= dict_multi_graph_s[edge[1]]
+        dict_list_nodes2= list(dict_list2.keys())
+
+        if edge[0] in dict_list_nodes2:
+            dict_list2[edge[0]].append(int(round(edge[2],0)))
+        else:
+            # Se un arco tra i due nodi non esiste, creo una lista con la distanza di un arco soltanto
+            distanza= [int(round(edge[2],0))]
+            dict_list2[edge[0]]= distanza
+
+    return dict_multi_graph_s
+
+# Controlla che se si tolgono gli archi (u,v),(v,w) e aggiungendo (u,w) il multigrafo rimane connesso
+def check_connection_multigraph(u,w,v,archi_v,dict_multi_graph_s):
+    node_v= copy.deepcopy(archi_v)
+
+    print("--connection_multigraph--\n")
+    print("u: " + str(u))
+    print("v: " + str(v))
+    print("w: " + str(w))
+    print("node_v :" + str(node_v))
+    new_dict= copy.deepcopy(dict_multi_graph_s)
+
+    # Cancello arco (v,u)
+    node_v.pop(u)
+    # cancello arco (v,w)
+    node_v.pop(w)
+
+    # una volta aggiornato i collegamenti di v ( che sono le chiavi del dizionario che tiro fuori con new_dict.pop(v)) reinserisco il nodo v nel dizionario
+    new_dict[v]= node_v
+
+    # tolto gli archi (uv), (vw) e aggiungo (u,w)
+    node_u= new_dict.pop(u)
+    
+    # Al nodo u inserisco il collegamento con w ( e poi faro il viceversa), per aggiungere questo collegamento basta aggiungere la chiave w , l'importante è che ci sia la chiave, il valore corrispettivo a tale chiave non è importante
+    # perchè qui devo solo guardare i nodi, non i valori degli archi
+    node_u[w]= 1000
+    new_dict[u]= node_u
+
+    node_w= new_dict.pop(w)
+
+    node_w[u]= 1000
+    new_dict[w]= node_w
+
+    # Ora che ho sistemato i collegamenti nel dizionario di prova, verifico che il grafo sia connesso
+    # Creo uno stack, parto da un nodo (in questo caso da v)
+    # Creo una lista, dove l'indice indica il nodo e il valore indica se tale nodo è stato visitato, se è stato visitato vale 1 altrimento 0
+    nNodi= len(dict_multi_graph_s.keys()) + 1 # + 1 perchè prima di passare dict_multi_graph_s a questa funzione viene fatta una pop su di esso ( node_v )
+    nodi_visitati=[]
+    i= 0
+    while i < nNodi:
+        nodi_visitati.append(0)
+        i += 1
+    
+    print("nodi_visitati: " + str(nodi_visitati))
+    # Vado a leggere il primo valore nello stack, inserisco nello stack tutti i nodi che non sono gia presenti nello stack  a cui v è collegato e che non sono gia stati visitati
+    # Una volta inseriti i nodi non ancora visitati nello stack, faccio il pop del valore appena letto e lo segno come visitato
+    stack= [int(v)]
+
+    while len(stack) > 0:
+        print("stack: " + str(stack))
+        # Tiro fuori il primo nodo nello stack
+        node= stack.pop(0)
+        # Lo segno come visitato
+        nodi_visitati[node]= 1
+
+        # Ora devo andare a mettere i nodi a cui node è collegato nello stack, in questo stack ci vanno i nodi che non sono stati ancora visitati e che ancora non sono nello stack
+        linked_node_dict= new_dict.get(node)
+
+        linked_node_list= list(linked_node_dict.keys())
+
+        for el in linked_node_list:
+            if nodi_visitati[el] == 0 and el not in stack:
+                stack.append(int(el))
+    
+    # Quando non ho più nodi nello stack esco dal while, ora controllo la lista nodi_visitati, se sono tutti a 1 allora il grafo è collegato, se c'è un nodo a 0 significa che non è stato visitato e quindi il grafo non è collegato
+    
+    if 0 in nodi_visitati:
+        return False
+    else:
+        return True
+
+
+
+def create_christofides_graph(perfect_matching_graph, mst_graph, dizionario_citta):
+    
+    pm_archi= []
+    for element in perfect_matching_graph:
+        pm_archi.append([element[0],element[1]])
+
+    mst_archi= []
+    for element in mst_graph:
+        mst_archi.append([element[0],element[1]])
+
+    multi_graph_S= pm_archi + mst_archi
+
+    dict_multi_graph_s= createDictGraph(perfect_matching_graph, mst_graph, dizionario_citta)
+    print("dict_multi_graph_s: " + str(dict_multi_graph_s))
+    draw_multigraph(dict_multi_graph_s, dizionario_citta, 20)
+    # Per prima cosa devo trovare i nodi con grado > 2
+    
+    greater_2_verteces= find_greater_2_degree_verteces(multi_graph_S, dizionario_citta)
+
+    print("greater_2_verteces: " + str(greater_2_verteces))
+    # n modo iterativo, 
+	# ∀ nodo v di grado >2, 
+	# - considera la coppia di archi (u,v) e (v,w) in S che massimizza cuv+cvw–cuw, con (u,w)∉S, mantenendo la connessione, 
+	# - sostituisci gli archi (u,v) e (v,w) con l’arco (u,w), garantendo la connessione di S 
+
+
+
+    # Per ogni vertice v di grado > 2 vado a prendere i due archi (u,v) e (v,w) che massimizzano C(u,v) + C(v,w) - C(u,w), con (u,w) non appartenente al multigrafo S
+
+    for vertex in greater_2_verteces:
+
+        max_cost= -10000000000000000000
+        weight_edge_U_W= 0
+        U= -1
+        V= -1
+        W= -1
+
+        archi_v= dict_multi_graph_s.pop(int(vertex))
+        nodi2_list= list(archi_v.keys())
+        #print("archi_v: " + str(archi_v))
+        for u in nodi2_list:
+            #print("archi_v.get(int(u)): " + str(archi_v.get(int(u))))
+            weight_edge_u_v=  list(archi_v.get(int(u)))
+            weight_edge_u_v= weight_edge_u_v[0]
+            for w in nodi2_list:
+                # Qui devo verificare che se togliessi u,v e v,w aggiungendo u,w il grafo rimarrebbe connesso, se non rimane connesso la scelta va scartata
+                if w != u and check_connection_multigraph(u,w,vertex,archi_v,dict_multi_graph_s):
+                    print("v: " + str(vertex))
+                    print("u: " + str(u))
+                    print("w: " + str(w))
+                    print("archi_v.get(int(w)): " + str(archi_v.get(int(w))))
+                    weight_edge_v_w= list(archi_v.get(int(w)))
+                    weight_edge_v_w= weight_edge_v_w[0]
+                    if u == 0:
+                        coordinate_u= [0,0]
+                    else:
+                        coordinate_u= dizionario_citta.get(int(u)).coordinate
+                    
+                    if w == 0:
+                        coordinate_w= [0,0]
+                    else:
+                        coordinate_w= dizionario_citta.get(int(w)).coordinate
+
+                    weight_edge_u_w= int(round(euclidean_distance(coordinate_u,coordinate_w),0))    
+                    print("weight_edge_u_w: "+ str(weight_edge_u_w))
+                    cost= weight_edge_u_v + weight_edge_v_w - weight_edge_u_w
+                    print("Cost: " + str(cost))
+                    if cost >= max_cost:
+                        max_cost= cost
+                        U= u
+                        V= vertex
+                        W= w
+                        weight_edge_U_W= weight_edge_u_w
+
+        # Finito il ciclo tra gli archi vado a cancellare gli archi che devo cancellare (u,v) e (v,w) e aggiungere l'arco che devo aggiungere (u,w)
+        print("---FineCiclo---")
+        print("V: " + str(V))
+        print("U: " + str(U))
+        print("W: " + str(W))
+        print("weight_edge_U_W: " + str(weight_edge_U_W))
+        print("max_cost: " + str(max_cost))
+
+        # Cancello (v,u)
+        arco_v_u= archi_v.pop(U)
+
+        # Se ci sono due stessi archi ne elimino solo 1 e l'altro lo lascio
+        if len(arco_v_u) > 1:
+            archi_v[U]= arco_v_u[0]
+
+        # cancello il simmetrico(u,v) 
+
+        archi_u= dict_multi_graph_s.pop(int(U))
+        
+        arco_u_v= archi_u.pop(V)
+
+        if len(arco_u_v) > 1:
+            archi_u[V]= arco_u_v[0]
+
+        # Aggiungo l'arco (u,w)
+        archi_u[W]= [weight_edge_U_W]
+        dict_multi_graph_s[U]= archi_u
+
+        # Cancello (v,w)
+        arco_v_w= archi_v.pop(W)
+
+        if len(arco_v_w) > 1:
+            archi_v[W]= arco_v_w[0]
+        
+        # cancello il simmetrico(w,v)
+        archi_w= dict_multi_graph_s.pop(int(W))
+        arco_w_v= archi_w.pop(V)
+
+        if len(arco_w_v) > 1:
+            archi_w[V]= arco_w_v[0]
+        
+        # Aggiungo l'arco (w,u)
+        archi_w[U]= [weight_edge_U_W]
+        dict_multi_graph_s[W]= archi_w
+
+        dict_multi_graph_s[V]= archi_v
+
+    return dict_multi_graph_s
+
+def Christofides_Algorithm(dizionario_citta, dizionario_stazioni, Max_Axis):
+
+    # 1) Trovare MST del grafo
+    dizionario_distanze_citta, dizionario_uso_archi, distanza_mst, mst_graph= MinimumSpanningTree(dizionario_citta)  # archi_usati[element1,element2,..], element= [nodoA,nodoB, peso arco] 
+    print("----mst-----")
+    print("mst_graph: " + str(mst_graph))
+    # Creo il plot
+    draw_mst(dizionario_citta, Max_Axis, mst_graph)
+
+    nodi= list(dizionario_citta.keys())
+    nodi.append(0)
+
+    # 2) Ottenere l'insieme dei vertici di grado dispari del mst
+    odd_degree_verteces=  find_odd_degree_verteces(nodi,mst_graph)
+
+
+    # 3) Creare il sottografo indotto dati i vertici di grado dispari trovati prima, da questo grafo, trovare il Perfect Matching di peso minimo
+    subgraph= create_induced_subgraph(dizionario_citta, odd_degree_verteces)
+    perfect_matching_graph, distanza_perfect_matching= find_perfect_matching(subgraph)
+    print("--perfect matching---")
+    print("perfect_matching: " + str(perfect_matching_graph))
+    # Creo il plot
+    subgraph_keys= list(subgraph.keys())
+    draw_perfect_matching(dizionario_citta, Max_Axis, subgraph_keys, perfect_matching_graph)
+
+    """ 4) n modo iterativo, 
+	∀ nodo v di grado >2, 
+	- considera la coppia di archi (u,v) e (v,w) in S che massimizza cuv+cvw–cuw, con (u,w)∉S, mantenendo la connessione, 
+	- sostituisci gli archi (u,v) e (v,w) con l’arco (u,w), garantendo la connessione di S """
+
+    christofides_graph_no_recharge= create_christofides_graph(perfect_matching_graph, mst_graph, dizionario_citta)
+
+    print("christofide_graph_no_recharge: " + str(christofides_graph_no_recharge))
+    draw_Christofides(christofides_graph_no_recharge, dizionario_citta, Max_Axis)
+
+    # UNA VOLTA TROVATO IL CIRCUITO HAMILTONIANO BISOGNA MODIFICARE IL GRAFO CONSIDERANDO L'AUTONOMIA DELL'AUTO
+"""    print("odd_degree_verteces: " + str(odd_degree_verteces))
+    print("n_odd_degree: " + str(len(odd_degree_verteces)))"""
