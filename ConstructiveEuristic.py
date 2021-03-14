@@ -1,6 +1,6 @@
 import math
 import copy
-from PlotGenerator import draw_mst, draw_perfect_matching, draw_Christofides, draw_multigraph
+import PlotGenerator as plt
 
 def euclidean_distance(A,B):
     x_A= A[0]
@@ -16,7 +16,6 @@ def euclidean_distance(A,B):
 
     return d
 
-
 # Conta il numero di città visitate
 def calcola_citta_visitate(percorso,dizionario_citta):
     citta= list(dizionario_citta.keys())
@@ -29,7 +28,6 @@ def calcola_citta_visitate(percorso,dizionario_citta):
 
     return n_citta_visitate
 
-
 # Conta il numero di nodi visitati    ( l'unica purtroppo differenza da 'calcola_citta_visitate' è che nodi è gia una lista di elementi e non un oggetto Cliente)
 def calcola_nodi_visitati(nodi_visitati,nodi):
     n_nodi_visitati= 0
@@ -39,8 +37,6 @@ def calcola_nodi_visitati(nodi_visitati,nodi):
             n_nodi_visitati += 1
 
     return n_nodi_visitati
-
-
 
 # ---------------------------------------- GREEDY ----------------------------------------
 # Per NearestNeighbour
@@ -75,9 +71,8 @@ def find_next_node(percorso,current_node,dizionario_citta,dizionario_stazioni):
                 
     return next_node, min_dist
 
-
 # Tempo di ricarica è dato da 0.25 unita di tempo per unita metrica di autonomia ricaricata
-def NearestNeighbour(dizionario_citta, dizionario_stazioni, deposito, k, N_CITIES):
+def NearestNeighbour(dizionario_citta, dizionario_stazioni, deposito, k, N_CITIES, Max_Axis):
     tempo_ricarica= 0  #Tempo speso a ricaricare
     distanza_percorsa= 0
 
@@ -207,8 +202,9 @@ def NearestNeighbour(dizionario_citta, dizionario_stazioni, deposito, k, N_CITIE
     tempo_totale= round(tempo_totale,2)
     distanza_percorsa= round(distanza_percorsa,2)
 
-    return percorso, distanza_percorsa, tempo_totale, tempo_ricarica
+    plt.draw_map(percorso, dizionario_citta, dizionario_stazioni, Max_Axis)
 
+    return percorso, distanza_percorsa, tempo_totale, tempo_ricarica
 
 # ---------------------------------------- NON GREEDY ----------------------------------------
 
@@ -579,7 +575,7 @@ def find_perfect_matching(subgraph):
             diz_archi_usati2= archi_usati.get(nodo2)
             diz_archi_usati2[nodo1]= 2
 
-    return perfect_matching, distanza_perfect_matching
+    return perfect_matching
         
 def createDictGraph(perfect_matching_graph, mst_graph, dizionario_citta):
     
@@ -649,11 +645,12 @@ def createDictGraph(perfect_matching_graph, mst_graph, dizionario_citta):
 def check_connection_multigraph(u,w,v,archi_v,dict_multi_graph_s):
     node_v= copy.deepcopy(archi_v)
 
-    print("--connection_multigraph--\n")
+    """print("--connection_multigraph--\n")
     print("u: " + str(u))
     print("v: " + str(v))
     print("w: " + str(w))
-    print("node_v :" + str(node_v))
+    print("node_v :" + str(node_v))"""
+
     new_dict= copy.deepcopy(dict_multi_graph_s)
 
     # Cancello arco (v,u)
@@ -687,13 +684,13 @@ def check_connection_multigraph(u,w,v,archi_v,dict_multi_graph_s):
         nodi_visitati.append(0)
         i += 1
     
-    print("nodi_visitati: " + str(nodi_visitati))
+    # print("nodi_visitati: " + str(nodi_visitati))
     # Vado a leggere il primo valore nello stack, inserisco nello stack tutti i nodi che non sono gia presenti nello stack  a cui v è collegato e che non sono gia stati visitati
     # Una volta inseriti i nodi non ancora visitati nello stack, faccio il pop del valore appena letto e lo segno come visitato
     stack= [int(v)]
 
     while len(stack) > 0:
-        print("stack: " + str(stack))
+        # print("stack: " + str(stack))
         # Tiro fuori il primo nodo nello stack
         node= stack.pop(0)
         # Lo segno come visitato
@@ -715,8 +712,6 @@ def check_connection_multigraph(u,w,v,archi_v,dict_multi_graph_s):
     else:
         return True
 
-
-
 def create_christofides_graph(perfect_matching_graph, mst_graph, dizionario_citta):
     
     pm_archi= []
@@ -730,13 +725,13 @@ def create_christofides_graph(perfect_matching_graph, mst_graph, dizionario_citt
     multi_graph_S= pm_archi + mst_archi
 
     dict_multi_graph_s= createDictGraph(perfect_matching_graph, mst_graph, dizionario_citta)
-    print("dict_multi_graph_s: " + str(dict_multi_graph_s))
-    draw_multigraph(dict_multi_graph_s, dizionario_citta, 20)
+    # print("dict_multi_graph_s: " + str(dict_multi_graph_s))
+    plt.draw_multigraph(dict_multi_graph_s, dizionario_citta, 20)
     # Per prima cosa devo trovare i nodi con grado > 2
     
     greater_2_verteces= find_greater_2_degree_verteces(multi_graph_S, dizionario_citta)
 
-    print("greater_2_verteces: " + str(greater_2_verteces))
+    # print("greater_2_verteces: " + str(greater_2_verteces))
     # n modo iterativo, 
 	# ∀ nodo v di grado >2, 
 	# - considera la coppia di archi (u,v) e (v,w) in S che massimizza cuv+cvw–cuw, con (u,w)∉S, mantenendo la connessione, 
@@ -764,10 +759,6 @@ def create_christofides_graph(perfect_matching_graph, mst_graph, dizionario_citt
             for w in nodi2_list:
                 # Qui devo verificare che se togliessi u,v e v,w aggiungendo u,w il grafo rimarrebbe connesso, se non rimane connesso la scelta va scartata
                 if w != u and check_connection_multigraph(u,w,vertex,archi_v,dict_multi_graph_s):
-                    print("v: " + str(vertex))
-                    print("u: " + str(u))
-                    print("w: " + str(w))
-                    print("archi_v.get(int(w)): " + str(archi_v.get(int(w))))
                     weight_edge_v_w= list(archi_v.get(int(w)))
                     weight_edge_v_w= weight_edge_v_w[0]
                     if u == 0:
@@ -781,9 +772,9 @@ def create_christofides_graph(perfect_matching_graph, mst_graph, dizionario_citt
                         coordinate_w= dizionario_citta.get(int(w)).coordinate
 
                     weight_edge_u_w= int(round(euclidean_distance(coordinate_u,coordinate_w),0))    
-                    print("weight_edge_u_w: "+ str(weight_edge_u_w))
+                    # print("weight_edge_u_w: "+ str(weight_edge_u_w))
                     cost= weight_edge_u_v + weight_edge_v_w - weight_edge_u_w
-                    print("Cost: " + str(cost))
+                    # print("Cost: " + str(cost))
                     if cost >= max_cost:
                         max_cost= cost
                         U= u
@@ -792,19 +783,13 @@ def create_christofides_graph(perfect_matching_graph, mst_graph, dizionario_citt
                         weight_edge_U_W= weight_edge_u_w
 
         # Finito il ciclo tra gli archi vado a cancellare gli archi che devo cancellare (u,v) e (v,w) e aggiungere l'arco che devo aggiungere (u,w)
-        print("---FineCiclo---")
-        print("V: " + str(V))
-        print("U: " + str(U))
-        print("W: " + str(W))
-        print("weight_edge_U_W: " + str(weight_edge_U_W))
-        print("max_cost: " + str(max_cost))
 
         # Cancello (v,u)
         arco_v_u= archi_v.pop(U)
 
         # Se ci sono due stessi archi ne elimino solo 1 e l'altro lo lascio
         if len(arco_v_u) > 1:
-            archi_v[U]= arco_v_u[0]
+            archi_v[U]= [arco_v_u[0]]
 
         # cancello il simmetrico(u,v) 
 
@@ -813,7 +798,7 @@ def create_christofides_graph(perfect_matching_graph, mst_graph, dizionario_citt
         arco_u_v= archi_u.pop(V)
 
         if len(arco_u_v) > 1:
-            archi_u[V]= arco_u_v[0]
+            archi_u[V]= [arco_u_v[0]]
 
         # Aggiungo l'arco (u,w)
         archi_u[W]= [weight_edge_U_W]
@@ -823,14 +808,14 @@ def create_christofides_graph(perfect_matching_graph, mst_graph, dizionario_citt
         arco_v_w= archi_v.pop(W)
 
         if len(arco_v_w) > 1:
-            archi_v[W]= arco_v_w[0]
+            archi_v[W]= [arco_v_w[0]]
         
         # cancello il simmetrico(w,v)
         archi_w= dict_multi_graph_s.pop(int(W))
         arco_w_v= archi_w.pop(V)
 
         if len(arco_w_v) > 1:
-            archi_w[V]= arco_w_v[0]
+            archi_w[V]= [arco_w_v[0]]
         
         # Aggiungo l'arco (w,u)
         archi_w[U]= [weight_edge_U_W]
@@ -840,14 +825,134 @@ def create_christofides_graph(perfect_matching_graph, mst_graph, dizionario_citt
 
     return dict_multi_graph_s
 
-def Christofides_Algorithm(dizionario_citta, dizionario_stazioni, Max_Axis):
+
+
+def create_green_graph(christofides_graph_no_recharge, dizionario_stazioni, dizionario_citta, k):
+    # Devo partire dal deposito, la direzione scelta  è quella del collegamento più corto 
+    autonomia= k
+    tempo_ricarica= 0
+    distanza_percorsa= 0
+    
+    percorso = [0]
+
+    current_node= 0
+
+    # La scelta di andare nella stazione di ricarica è tale e quale a quella della nearest neighbour, se lo spostamento mi porterebbe in una citta e rimanessi con un'autonomia non sufficiente ad arrivare alla stazione di ricarica di quel quadrante
+    # allora prima di andare in quella città vado in una stazione di rifornimento e mi ricarico. Qui posso vedere quanto ricaricare, tale scelta la posso fare nella seguente maniera:
+    # Ipotizzo di fare una ricarica piena, proseguo nel mio tragitto e verifico quanta autonomia mi rimarrebbe nel momento in cui dovrò andare a fare una ricarica,
+    # La ricarica che quindi farò sarà pari a: Autonomia piena - Autonomia rimanente di quando sarò nella stazione di ricarica futura
+
+    # Devo scegliere come secondo nodo (per dare una direzione di percorrenza) il nodo più vicino
+    min_dist= 100000000
+    dict_nodo_dep= christofides_graph_no_recharge.get(int(current_node))
+
+    linked_nodes= list(dict_nodo_dep.keys())
+    previous_node= current_node
+
+    for node in linked_nodes:
+        dist_node= dict_nodo_dep.get(int(node))
+        if dist_node[0] <= min_dist:
+            min_dist = dist_node[0]
+            current_node= node
+            dist= dist_node[0]
+
+    autonomia -= dist
+    distanza_percorsa += dist
+
+    # Ciclo fino a quando non ritorno al  nodo di partenza, ovvero il nodo 0 ( deposito )
+    while current_node != 0:
+
+        percorso.append(current_node)
+
+        print("current_node: " + str(current_node))
+        if 'S' not in str(current_node):
+            dict_current_node= christofides_graph_no_recharge.get(int(current_node))
+        else:
+            dict_current_node= christofides_graph_no_recharge.get(current_node)
+
+        linked_nodes= list(dict_current_node.keys())
+
+        
+        for node in linked_nodes:
+            if node != previous_node:
+                next_node= node
+
+
+        distanza_next_node= dict_current_node.get(int(next_node))
+
+        future_autonomy= autonomia - distanza_next_node[0]
+
+        print("next_node: " + str(next_node))
+        if next_node == 0:
+            if 'S' in str(current_node):
+                current_node= current_node.replace("S","")
+                coordinate_current_node= dizionario_stazioni.get(int(current_node))
+            else:
+                current_citta= dizionario_citta.get(current_node)
+                coordinate_current_node= current_citta.coordinate
+            distanza_stazione_next_node= int(euclidean_distance([0,0],coordinate_current_node))
+        else:
+            next_citta= dizionario_citta.get(next_node)
+            distanza_stazione_next_node= next_citta.distanza_stazione
+        
+        # Vado alla stazione di ricarica se andando nel next_node avrò un autonomia che non mi permetterà di andare a ricaricare quando sarò al next node oppure se da current node non ho abbastanza autonomia per raggiungere next_node
+        if future_autonomy < distanza_stazione_next_node or autonomia < distanza_next_node[0]:
+
+            # Per inserire la stazione di ricarica nel percorso devo togliere next_node da dict_current_node e aggiungere la stazione di ricarica e viceversa,
+            # ovvero, dal dizionario di next_node devo togliere current_node e aggiungerci la stazione di ricarica
+
+            quadrante= dizionario_citta.get(current_node).get_quadrant()
+
+            # Tolgo i collegamenti con il nodo futuro e viceversa
+            dict_current_node.pop(next_node)
+
+            dict_next_node= christofides_graph_no_recharge.get(int(next_node))
+            dict_next_node.pop(int(current_node))
+
+            # Aggiungo il collegamento con la stazione
+            distanza_current_node_stazione= dizionario_citta.get(current_node).distanza_stazione
+            next_key= str(quadrante) + 'S'
+            dict_current_node[next_key]= [distanza_current_node_stazione]
+
+            # Aggiungo il collegamento con la stazione anche nel nodo successivo
+            dict_next_node[next_key]= [distanza_stazione_next_node]
+
+            # Ora devo aggiungere la stazione nel dizionario
+            distanze_stazione={}
+            
+            distanze_stazione[current_node]= [distanza_current_node_stazione]
+            distanze_stazione[next_node]= [distanza_stazione_next_node]
+            christofides_graph_no_recharge[next_key]= distanze_stazione
+
+            # Calcolo il tempo di ricarica
+            tempo_ricarica += (k - autonomia) * 0.25
+            # Per ora ricarico completamente l'autonomia    
+            autonomia= k
+            distanza_percorsa += distanza_current_node_stazione
+            previous_node= current_node
+            current_node= next_key
+        else:
+
+            previous_node= current_node
+            current_node= next_node
+            autonomia = future_autonomy
+            distanza_percorsa += distanza_next_node[0]
+
+    percorso.append(0)
+    tempo_ricarica += distanza_percorsa
+
+    return christofides_graph_no_recharge, distanza_percorsa, tempo_ricarica
+
+
+
+
+def Christofides_Algorithm(dizionario_citta, dizionario_stazioni, Max_Axis, k):
 
     # 1) Trovare MST del grafo
     dizionario_distanze_citta, dizionario_uso_archi, distanza_mst, mst_graph= MinimumSpanningTree(dizionario_citta)  # archi_usati[element1,element2,..], element= [nodoA,nodoB, peso arco] 
-    print("----mst-----")
-    print("mst_graph: " + str(mst_graph))
+
     # Creo il plot
-    draw_mst(dizionario_citta, Max_Axis, mst_graph)
+    plt.draw_mst(dizionario_citta, Max_Axis, mst_graph)
 
     nodi= list(dizionario_citta.keys())
     nodi.append(0)
@@ -858,23 +963,29 @@ def Christofides_Algorithm(dizionario_citta, dizionario_stazioni, Max_Axis):
 
     # 3) Creare il sottografo indotto dati i vertici di grado dispari trovati prima, da questo grafo, trovare il Perfect Matching di peso minimo
     subgraph= create_induced_subgraph(dizionario_citta, odd_degree_verteces)
-    perfect_matching_graph, distanza_perfect_matching= find_perfect_matching(subgraph)
-    print("--perfect matching---")
-    print("perfect_matching: " + str(perfect_matching_graph))
+    perfect_matching_graph= find_perfect_matching(subgraph)
+
     # Creo il plot
     subgraph_keys= list(subgraph.keys())
-    draw_perfect_matching(dizionario_citta, Max_Axis, subgraph_keys, perfect_matching_graph)
+    plt.draw_perfect_matching(dizionario_citta, Max_Axis, subgraph_keys, perfect_matching_graph)
 
-    """ 4) n modo iterativo, 
-	∀ nodo v di grado >2, 
-	- considera la coppia di archi (u,v) e (v,w) in S che massimizza cuv+cvw–cuw, con (u,w)∉S, mantenendo la connessione, 
-	- sostituisci gli archi (u,v) e (v,w) con l’arco (u,w), garantendo la connessione di S """
+    # 4) n modo iterativo, 
+	# ∀ nodo v di grado >2, 
+	# - considera la coppia di archi (u,v) e (v,w) in S che massimizza cuv+cvw–cuw, con (u,w)∉S, mantenendo la connessione, 
+	# - sostituisci gli archi (u,v) e (v,w) con l’arco (u,w), garantendo la connessione di S
 
     christofides_graph_no_recharge= create_christofides_graph(perfect_matching_graph, mst_graph, dizionario_citta)
 
     print("christofide_graph_no_recharge: " + str(christofides_graph_no_recharge))
-    draw_Christofides(christofides_graph_no_recharge, dizionario_citta, Max_Axis)
+    
+    plt.draw_Christofides(christofides_graph_no_recharge, dizionario_citta, Max_Axis)
 
     # UNA VOLTA TROVATO IL CIRCUITO HAMILTONIANO BISOGNA MODIFICARE IL GRAFO CONSIDERANDO L'AUTONOMIA DELL'AUTO
-"""    print("odd_degree_verteces: " + str(odd_degree_verteces))
-    print("n_odd_degree: " + str(len(odd_degree_verteces)))"""
+
+    christofides_graph, distanza_percorsa, tempo_viaggio= create_green_graph(christofides_graph_no_recharge, dizionario_stazioni, dizionario_citta, k)
+
+    plt.draw_Christofides_green(christofides_graph, dizionario_citta, dizionario_stazioni, Max_Axis)
+
+    return christofides_graph, distanza_percorsa, tempo_viaggio
+
+

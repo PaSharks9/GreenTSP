@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 
 
 def draw_map(percorso, dizionario_citta, dizionario_stazioni, Max_Axis):
-     # -------------------- Creo SubPlot --------------------
+    # -------------------- Creo SubPlot --------------------
     figNN= plt.figure() 
     # -------------------- INIZIALIZZO GRAFICO --------------------
     plt.title('GreenTSP Map')
@@ -158,7 +158,7 @@ def draw_mst(dizionario_citta, Max_Axis, archi_usati):
     plt.savefig('img/Christofides/MST/MST_CitiesMap.jpg')
 
     #-------------------- Disegno semirette --------------------
-    i = 0
+    #i = 0
     for edge in archi_usati:
         nodo1= edge[0]
         nodo2= edge[1]
@@ -263,8 +263,6 @@ def draw_perfect_matching(dizionario_citta, Max_Axis, subgraph, archi_usati):
     plt.savefig('img/Christofides/Perfect_Matching/MST_Map.jpg')
     plt.close(figPM)
 
-
-
 def draw_Christofides(christofides_graph_no_recharge, dizionario_citta, Max_Axis):
 
     """keys= list(christofides_graph_no_recharge.keys())
@@ -350,7 +348,6 @@ def draw_Christofides(christofides_graph_no_recharge, dizionario_citta, Max_Axis
     plt.savefig(directory+filename)
     plt.close(figC)
 
-
 def draw_multigraph(christofides_graph_no_recharge, dizionario_citta, Max_Axis):
     """keys= list(christofides_graph_no_recharge.keys())
     for key in keys:
@@ -432,3 +429,103 @@ def draw_multigraph(christofides_graph_no_recharge, dizionario_citta, Max_Axis):
     filename= "MultiGraph.jpg" 
     plt.savefig(directory+filename)
     plt.close(figC)
+
+
+def draw_Christofides_green(christofides_graph, dizionario_citta, dizionario_stazioni, Max_Axis):
+    # -------------------- Creo SubPlot --------------------
+    figCG= plt.figure() 
+    # -------------------- INIZIALIZZO GRAFICO --------------------
+    plt.title('GreenTSP Map')
+    plt.grid(True)
+
+    pointsCity_List= list(dizionario_citta.keys())
+
+    pointsStation_List= list(dizionario_stazioni.keys())
+
+    # Do valori agli assi cartesiani
+    plt.axis([-Max_Axis-1, Max_Axis+1, -Max_Axis-1, Max_Axis+1])
+
+    plt.xticks([1*k for k in range(-Max_Axis,Max_Axis+1)])
+    plt.yticks([1*k for k in range(-Max_Axis,Max_Axis+1)])
+    # Creo i 4 quadranti disegnando semplicemente la retta verticale e la retta orizzontale
+    plt.axvline(0,0,color='black')
+
+    plt.axhline(0,0,color='black')
+
+    x_city_coordinates=[]
+    y_city_coordinates=[]
+
+    x_stations_coordinates=[]
+    y_stations_coordinates=[]
+
+    # Disegno i punti
+    for key in pointsCity_List:
+        cliente= dizionario_citta.get(key)
+        x_city_coordinates.append(cliente.coordinate[0])
+        y_city_coordinates.append(cliente.coordinate[1])
+
+    plt.scatter(x_city_coordinates, y_city_coordinates, s=20, edgecolors='none', c='green', label="Cliente")
+    # Do i nomi ai punti
+    for key in pointsCity_List:
+        plt.annotate(str(key), (x_city_coordinates[key - 1],y_city_coordinates[key - 1]))
+
+
+    for key in pointsStation_List:
+        coordinate= dizionario_stazioni.get(key)
+        x_stations_coordinates.append(coordinate[0])
+        y_stations_coordinates.append(coordinate[1])
+    
+    plt.scatter(x_stations_coordinates, y_stations_coordinates, marker='x', s=50, edgecolors='none', c='red', label="Stazioni di Ricarica")
+   
+    #Do i nomi alle stazioni
+    for key in pointsStation_List:
+        name_station= str(key) + "S"
+        plt.annotate(name_station, (x_stations_coordinates[key - 1],y_stations_coordinates[key - 1]))
+
+    #Do il nome al deposito
+    plt.annotate('D', (0,0))
+
+
+
+    # Disegno il deposito che si trova in coordinate [0,0]
+    plt.scatter(0,0,s=50, edgecolors='none', c='blue', label="Deposito")
+
+    # --------------------- Disegno Righe ----------------------------------
+    cities= list(dizionario_citta.keys())
+    cities.append(0)
+    
+    i = 0
+    for vertex in cities:
+        edge_v= christofides_graph.get(int(vertex))
+
+        nodes_u= list(edge_v.keys())
+
+        for u in nodes_u:
+ 
+            if vertex != 0:
+                nodo_1= dizionario_citta.get(int(vertex))
+                coordinate1= nodo_1.coordinate
+            else:
+                coordinate1= [0,0]
+
+            if u != 0:
+                if 'S' in str(u):
+                    key = u.replace('S','')
+                    coordinate2= dizionario_stazioni.get(int(key))
+                else:
+                    nodo_2= dizionario_citta.get(int(u))
+                    coordinate2= nodo_2.coordinate
+            else:
+                coordinate2= [0,0]
+
+            if 'S' in str(u):
+                plt.plot([coordinate1[0],coordinate2[0]],[coordinate1[1],coordinate2[1]], color='blue')
+            else:
+                plt.plot([coordinate1[0],coordinate2[0]],[coordinate1[1],coordinate2[1]], color='green')
+
+    
+
+    directory= "img/Christofides/"
+    filename= "Christofides_Green_Map.jpg" 
+    plt.savefig(directory+filename)
+    plt.close(figCG)

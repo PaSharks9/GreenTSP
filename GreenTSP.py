@@ -80,40 +80,64 @@ if __name__ == "__main__":
 
     deposito= 0
 
+    scelta_algoritmi= 1
+    print("------------------------------------ Menu Algoritmi Costruttivi ------------------------------------")
 
-    #dizionario_distanze_citta, dizionario_uso_archi, distanza_mst, archi_usati= MinimumSpanningTree(dizionario_citta)
-    percorso, distanza_percorsa, tempo_totale, tempo_ricarica= NearestNeighbour(dizionario_citta,dizionario_stazioni,deposito,k,N_CITIES)
+    print("\n-- Algoritmi Greedy: ")
+    print("1- Nearest Neighbour")
+    print("\n-- Algoritmi non Greedy: ")
+    print("2- Christofides Algorithm")
+    print("\n--Altro")
+    print("3- Tutti gli algoritmi Costruttivi")
+    scelta_algoritmi= int(input("\n Scelta: "))
 
-    Christofides_Algorithm(dizionario_citta, dizionario_stazioni, Max_Axis)
-    
+    if scelta_algoritmi == 1:
+        percorso, distanza_percorsa, tempo_totale, tempo_ricarica= NearestNeighbour(dizionario_citta,dizionario_stazioni,deposito,k,N_CITIES, Max_Axis)
+    elif scelta_algoritmi == 2:
+        christofides_graph_no_recharge, distanza_percorsa_Christofides, tempo_ricarica_christofides= Christofides_Algorithm(dizionario_citta, dizionario_stazioni, Max_Axis, k)
+    elif scelta_algoritmi == 3:
+        percorso, distanza_percorsa, tempo_totale, tempo_ricarica= NearestNeighbour(dizionario_citta,dizionario_stazioni,deposito,k,N_CITIES, Max_Axis)
+        christofides_graph_no_recharge, distanza_percorsa_Christofides, tempo_ricarica_christofides= Christofides_Algorithm(dizionario_citta, dizionario_stazioni, Max_Axis, k)
+
+    print("------------------------------------ Menu Stampe ------------------------------------ ") 
     scelta_stampe= 1
     while scelta_stampe != 0:
-
-        print("------------------------------------ Menu Stampe ------------------------------------ ")
-        print("\n1- Stampa risultati Nearest Neighbour")
-        print("2- Stampa risultati Minimum Spanning Tree (Kruskal Algorithm)")
+        if scelta_algoritmi == 3:
+            print("\n1- Stampa risultati Nearest Neighbour")
+            print("2- Stampa risultati Christofides_Algorithm ")
+        elif scelta_algoritmi == 2:
+            print("\n1- Stampa risultati Christofides_Algorithm ")
+        elif scelta_algoritmi == 1:
+            print("\n1- Stampa risultati Nearest Neighbour")
         print("0- Exit")
 
         scelta_stampe= int(input("\nScelta: "))
+
+
     # Stampo i risultati
-        if scelta_stampe == 1:
-            print_nearest_neighbour(percorso, distanza_percorsa, tempo_totale, tempo_ricarica)
-        #elif scelta_stampe == 2:
-        # print_mst(dizionario_distanze_citta, dizionario_uso_archi, distanza_mst, archi_usati)
-        elif scelta_stampe == 0:
-            break
+        if scelta_algoritmi == 3:
+            if scelta_stampe == 1:
+                print_nearest_neighbour(percorso, distanza_percorsa, tempo_totale, tempo_ricarica)
+            elif scelta_stampe == 2:
+                print("Dizionario Christofides: " + str(christofides_graph_no_recharge))
+                print("Distanza: "  + str(distanza_percorsa_Christofides))
+                print("Tempo viaggio: " + str(tempo_ricarica_christofides))
+            elif scelta_stampe == 0:
+                break
 
+        elif scelta_algoritmi == 2:
+            if scelta_stampe == 1:
+                print("Dizionario Christofides: " + str(christofides_graph_no_recharge))
+                print("Distanza: "  + str(distanza_percorsa_Christofides))
+                print("Tempo viaggio: " + str(tempo_ricarica_christofides))
+            elif scelta_stampe == 0:
+                break
 
+        elif scelta_algoritmi == 1:
 
+            if scelta_stampe == 1:
+                print_nearest_neighbour(percorso, distanza_percorsa, tempo_totale, tempo_ricarica)
+            elif scelta_stampe == 0:
+                break
 
-
-
-
-
-    
-    
-    #print("subgraph_keys: " + str(subgraph_keys))
-# Creo le immagini
-    # Disegna NearestNeighbour
-    draw_map(percorso, dizionario_citta, dizionario_stazioni, Max_Axis)
 
