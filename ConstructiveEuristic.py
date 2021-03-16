@@ -39,7 +39,9 @@ def calcola_nodi_visitati(nodi_visitati,nodi):
     return n_nodi_visitati
 
 # ---------------------------------------- GREEDY ----------------------------------------
-# Per NearestNeighbour
+
+# ---------------------------------------- Christofides_Algorithm ----------------------------------------
+
 def find_next_node(percorso,current_node,dizionario_citta,dizionario_stazioni):
     min_dist= 10000000
 
@@ -204,10 +206,18 @@ def NearestNeighbour(dizionario_citta, dizionario_stazioni, deposito, k, N_CITIE
 
     plt.draw_map(percorso, dizionario_citta, dizionario_stazioni, Max_Axis)
 
-    return percorso, distanza_percorsa, tempo_totale, tempo_ricarica
+
+    dizionario_Nearest_Neighbour= {}
+    dizionario_Nearest_Neighbour['percorso']= percorso
+    dizionario_Nearest_Neighbour['distanza']= distanza_percorsa
+    dizionario_Nearest_Neighbour['tempo_tot']= tempo_totale
+    dizionario_Nearest_Neighbour['tempo_ricarica']= tempo_ricarica
+
+
+    return dizionario_Nearest_Neighbour
 
 # ---------------------------------------- NON GREEDY ----------------------------------------
-
+# ---------------------------------------- Christofides_Algorithm ----------------------------------------
 # Per MST
 def calcola_dizionario_distanze(dizionario_citta):
     dizionario_distanze_citta= {}
@@ -487,7 +497,8 @@ def MinimumSpanningTree(dizionario_citta):
             lista_distanze_usateN1[int(nodo2)]= 2   # Valore 2 indica che non è utilizzabile in quanto creerebbe un ciclo, non importa in realtà il valore che gli metto, l'importante è non lasciarlo a 0 in quanto se rimane a 0 dopo viene riselezionato entrando in un loop infinito
             lista_distanze_usateN2[int(nodo1)]= 2
 
-    return dizionario_distanze_citta, dizionario_uso_archi, distanza_mst, archi_usati
+    # return dizionario_distanze_citta, dizionario_uso_archi, distanza_mst, archi_usati
+    return archi_usati
 
 def create_induced_subgraph(dizionario_citta, odd_degree_verteces):
     
@@ -825,8 +836,6 @@ def create_christofides_graph(perfect_matching_graph, mst_graph, dizionario_citt
 
     return dict_multi_graph_s
 
-
-
 def create_green_graph(christofides_graph_no_recharge, dizionario_stazioni, dizionario_citta, k):
     # Devo partire dal deposito, la direzione scelta  è quella del collegamento più corto 
     autonomia= k
@@ -864,7 +873,7 @@ def create_green_graph(christofides_graph_no_recharge, dizionario_stazioni, dizi
 
         percorso.append(current_node)
 
-        print("current_node: " + str(current_node))
+        # print("current_node: " + str(current_node))
         if 'S' not in str(current_node):
             dict_current_node= christofides_graph_no_recharge.get(int(current_node))
         else:
@@ -882,7 +891,7 @@ def create_green_graph(christofides_graph_no_recharge, dizionario_stazioni, dizi
 
         future_autonomy= autonomia - distanza_next_node[0]
 
-        print("next_node: " + str(next_node))
+        # print("next_node: " + str(next_node))
         if next_node == 0:
             if 'S' in str(current_node):
                 current_node= current_node.replace("S","")
@@ -939,18 +948,14 @@ def create_green_graph(christofides_graph_no_recharge, dizionario_stazioni, dizi
             distanza_percorsa += distanza_next_node[0]
 
     percorso.append(0)
-    tempo_ricarica += distanza_percorsa
-
-    return christofides_graph_no_recharge, distanza_percorsa, tempo_ricarica
-
-
-
+    tempo_totale= tempo_ricarica + distanza_percorsa
+    return christofides_graph_no_recharge, distanza_percorsa, tempo_ricarica, percorso, tempo_totale
 
 def Christofides_Algorithm(dizionario_citta, dizionario_stazioni, Max_Axis, k):
 
     # 1) Trovare MST del grafo
-    dizionario_distanze_citta, dizionario_uso_archi, distanza_mst, mst_graph= MinimumSpanningTree(dizionario_citta)  # archi_usati[element1,element2,..], element= [nodoA,nodoB, peso arco] 
-
+    # dizionario_distanze_citta, dizionario_uso_archi, distanza_mst, mst_graph= MinimumSpanningTree(dizionario_citta)  # archi_usati[element1,element2,..], element= [nodoA,nodoB, peso arco] 
+    mst_graph= MinimumSpanningTree(dizionario_citta)
     # Creo il plot
     plt.draw_mst(dizionario_citta, Max_Axis, mst_graph)
 
@@ -976,16 +981,24 @@ def Christofides_Algorithm(dizionario_citta, dizionario_stazioni, Max_Axis, k):
 
     christofides_graph_no_recharge= create_christofides_graph(perfect_matching_graph, mst_graph, dizionario_citta)
 
-    print("christofide_graph_no_recharge: " + str(christofides_graph_no_recharge))
+    # print("christofide_graph_no_recharge: " + str(christofides_graph_no_recharge))
     
     plt.draw_Christofides(christofides_graph_no_recharge, dizionario_citta, Max_Axis)
 
     # UNA VOLTA TROVATO IL CIRCUITO HAMILTONIANO BISOGNA MODIFICARE IL GRAFO CONSIDERANDO L'AUTONOMIA DELL'AUTO
 
-    christofides_graph, distanza_percorsa, tempo_viaggio= create_green_graph(christofides_graph_no_recharge, dizionario_stazioni, dizionario_citta, k)
-
+    christofides_graph, distanza_percorsa, tempo_ricarica, percorso, tempo_totale= create_green_graph(christofides_graph_no_recharge, dizionario_stazioni, dizionario_citta, k)
     plt.draw_Christofides_green(christofides_graph, dizionario_citta, dizionario_stazioni, Max_Axis)
 
-    return christofides_graph, distanza_percorsa, tempo_viaggio
+
+    # print("christofide_graph: " + str(christofides_graph))
+
+    dizionario_Christofides= {}
+    dizionario_Christofides['percorso']= percorso
+    dizionario_Christofides['distanza']= distanza_percorsa
+    dizionario_Christofides['tempo_tot']= tempo_totale
+    dizionario_Christofides['tempo_ricarica']= tempo_ricarica
+
+    return  dizionario_Christofides
 
 

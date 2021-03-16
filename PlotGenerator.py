@@ -430,7 +430,6 @@ def draw_multigraph(christofides_graph_no_recharge, dizionario_citta, Max_Axis):
     plt.savefig(directory+filename)
     plt.close(figC)
 
-
 def draw_Christofides_green(christofides_graph, dizionario_citta, dizionario_stazioni, Max_Axis):
     # -------------------- Creo SubPlot --------------------
     figCG= plt.figure() 
@@ -494,7 +493,7 @@ def draw_Christofides_green(christofides_graph, dizionario_citta, dizionario_sta
     cities= list(dizionario_citta.keys())
     cities.append(0)
     
-    i = 0
+    # i = 0
     for vertex in cities:
         edge_v= christofides_graph.get(int(vertex))
 
