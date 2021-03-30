@@ -1,20 +1,10 @@
-import math
 import copy
+import time
+import os
 import PlotGenerator as plt
+from Cliente import Cliente, euclidean_distance
+from subprocess import PIPE, Popen
 
-def euclidean_distance(A,B):
-    x_A= A[0]
-    y_A= A[1]
-
-    x_B= B[0]
-    y_B= B[1]
-
-    x= abs(x_A - x_B)
-    y= abs(y_A - y_B)
-
-    d= math.sqrt(x**2 + y**2)
-
-    return d
 
 # Conta il numero di città visitate
 def calcola_citta_visitate(percorso,dizionario_citta):
@@ -40,7 +30,7 @@ def calcola_nodi_visitati(nodi_visitati,nodi):
 
 # ---------------------------------------- GREEDY ----------------------------------------
 
-# ---------------------------------------- Christofides_Algorithm ----------------------------------------
+# ---------------------------------------- Nearest Neighbour ----------------------------------------
 
 def find_next_node(percorso,current_node,dizionario_citta,dizionario_stazioni):
     min_dist= 10000000
@@ -62,9 +52,11 @@ def find_next_node(percorso,current_node,dizionario_citta,dizionario_stazioni):
 
 
     for client in clients:
+
         if client not in percorso:
             node= dizionario_citta.get(int(client))
-
+            
+            # La distanza è approssimata ad intero  da euclidean_distance
             distance= euclidean_distance(node.coordinate,current_coordinate)
 
             if distance <= min_dist:
@@ -73,15 +65,91 @@ def find_next_node(percorso,current_node,dizionario_citta,dizionario_stazioni):
                 
     return next_node, min_dist
 
+
+
+def calcolo_ricarica(k, node_station, percorso, dizionario_citta, dizionario_stazioni, N_CITIES):
+    print("-----------Dentro calcolo ricarica-----------")
+    n_citta_visitate= calcola_citta_visitate(percorso, dizionario_citta)
+
+    autonomia= k
+    # print("node_station: " + str(node_station))
+    current_node= node_station
+    # Fino alla penultima citta, quando arrivo alla penultima città esco dal while, è un caso particolare perchè devo farla arrivare al deposito
+    while n_citta_visitate < N_CITIES - 1 :
+        # print("current_node: " + str(current_node))
+        # print("autonomia_calcolo_ricarica: " + str(autonomia))
+        # Se il nodo corrente non è il deposito, prendo l'oggetto cliente relativo
+        if current_node != 0 and 'S' not in str(current_node):
+            current_client= dizionario_citta.get(current_node)
+
+        next_node, next_distance= find_next_node(percorso,current_node,dizionario_citta,dizionario_stazioni)
+
+        # print("next_node: " + str(next_node))
+        # print("next_distance: " + str(next_distance))
+
+        future_autonomy= autonomia - next_distance
+
+        # print("future_autonomy: " + str(future_autonomy))
+
+        next_client= dizionario_citta.get(int(next_node))
+
+        # print("distanza_stazione_next_client: " + str(next_client.distanza_stazione))
+        if future_autonomy - next_client.distanza_stazione < 0:
+            print("future_autonomy: " + str(future_autonomy))
+            print("next_client.distanza_stazione: " + str(next_client.distanza_stazione))
+            print("future_autonomy - next_client.distanza_stazione: " + str(future_autonomy - next_client.distanza_stazione))
+            node_station= str(current_client.get_quadrant()) + 'S'
+            print("current_client:" + str(current_client.numero))
+            percorso.append(node_station) 
+
+            # Calcolo quanta autonomia mi rimane quando arrivo alla prossima stazione, questa autonomia rimanente va scalata dalla ricarica precedente, in modo da evitare sprechi 
+            distanza_stazione= current_client.distanza_stazione
+            print("distanza_stazione_corrente: " + str(distanza_stazione))
+            autonomia_residua= autonomia - distanza_stazione
+            break
+        else:
+
+            autonomia -= next_distance
+
+            current_node= next_node
+
+            percorso.append(next_node)
+
+        n_citta_visitate= calcola_citta_visitate(percorso,dizionario_citta)
+    
+    if n_citta_visitate == N_CITIES - 1:
+        if 'S' in str(current_node):
+            node_station= current_node.replace("S",""),
+            stazioni_coordinate= dizionario_stazioni.get(int(node_station))
+            distanza_deposito= euclidean_distance(stazioni_coordinate, [0,0])
+            autonomia_residua= autonomia - distanza_deposito
+            return autonomia_residua
+        else:
+            current_client= dizionario_citta.get(current_node)
+            if autonomia - current_client.distanza_deposito < 0:
+
+                node_station= str(current_client.get_quadrant()) + 'S'
+                distanza_stazione = current_client.distanza_stazione
+
+                autonomia_residua= autonomia - distanza_stazione
+                return autonomia_residua
+
+        autonomia_residua= autonomia - current_client.distanza_deposito
+        return autonomia_residua
+
+    else:
+        return autonomia_residua
+    
+
 # Tempo di ricarica è dato da 0.25 unita di tempo per unita metrica di autonomia ricaricata
-def NearestNeighbour(dizionario_citta, dizionario_stazioni, deposito, k, N_CITIES, Max_Axis):
+def NearestNeighbour(dizionario_citta, dizionario_stazioni, k, N_CITIES, Max_Axis):
     tempo_ricarica= 0  #Tempo speso a ricaricare
     distanza_percorsa= 0
 
     autonomia= k
     percorso= []
 
-    current_node= deposito
+    current_node= 0  # 0 è il deposito
 
     # Il nodo 0 è il deposito
     percorso.append(0)
@@ -89,24 +157,39 @@ def NearestNeighbour(dizionario_citta, dizionario_stazioni, deposito, k, N_CITIE
     n_citta_visitate= calcola_citta_visitate(percorso,dizionario_citta)
 
 
-    # Qua ci vuole un ciclo while
+    # Fino a quando non ho visitato tutte le citta cerco il prossimo nodo da visitare
+    # Sto nel ciclo fino a quando non mi manca di inserire nel percorso l'ultima città da visitare ( Es. N_CITIES= 10, le città sono in tutto 9 perchè 
+    # nelle 10 città c'è anche 1 deposito, quindi sto nel ciclo fino a un n di città nel percorso < 9 cioè fino a 8 città, quando aggiungo la 9 e quindi l'ultima esco)
     while n_citta_visitate < N_CITIES - 1:
-
         # Se il nodo corrente non è il deposito, prendo l'oggetto cliente relativo
         if current_node != 0 and 'S' not in str(current_node):
             current_client= dizionario_citta.get(current_node)
 
-
         next_node, next_distance= find_next_node(percorso,current_node,dizionario_citta,dizionario_stazioni)
 
-        future_autonomy= autonomia - next_distance
+        future_autonomy= autonomia - next_distance  # Con future_autonomy tengo traccia dell'autonomia futura che avrò nel caso mi spostassi in next_node come prossimo passo 
 
         next_client= dizionario_citta.get(int(next_node))
 
+        # ------- AMMISSIBILITA' DELLA MOSSA -------------
+
         # Se l'autonomia rimanente dovuta al prossimo spostamento che vorrei fare, non mi permetterebbe di andare a ricaricare partendo dal next_node
         # significa che non mi dovrò muovere verso il next_node ma dovrò prima andare a ricaricare l'auto 
-        # NB: Questa condizione è veritiera solo nel caso in cui le stazioni di ricarica siano al centro di ogni quadrante
+        # Questa condizione include già anche il caso in cui partendo da una città non si ha autonomia per arrivare alla città più vicina successiva perchè
+        # se non ho autonomia per arrivare alla città successiva più vicina  non ho l'autonomia neanche per arrivare alla stazione di ricarica della città successiva
+        # E' anche vero però che potrei avere autonomia per arrivare alla città successiva e anche a quella successiva delle successiva ma non per arrivare alla stazione di ricarica a partire dalla successiva
+        # Però secondo me come algoritmo costruttivo questo tipo di mossa può essere comunque valida, anche se non è perfettamente precisa
+
+        #------------------------- NB: Forse l'ammissibilita potrei strutturarla  anche così: 
+        # Forse avrei dovuto guardare avanti di 2 passi, 1) guardo se nel next_node ho autonomia a sufficienza per andare al next_next_node e in tale nodo ho ancora autonomia per andare a fare la ricarica
+        # 2) se non ho autonomia a sufficienza guardo se nel next_node ho autonomia a sufficienza per andare a ricaricare partendo dal next_node
+        # 3) se non ho autonomia sufficienza per ricaricare  a partire dal next_node, vado a ricaricare partendo dal current_node
+        # ------------------------ Valutazione: Per me può anche andare bene come ho fatto perchè l'importante è che da un algoritmo costruttivo esca una soluzione di media bontà, non necessariamente ottima o molto buona in modo che poi si veda come lavori la LS e la meta euristica successiva
+        # (Da Valutare la veridicità) NB: Questa condizione è veritiera solo nel caso in cui le stazioni di ricarica siano al centro di ogni quadrante
+
         if future_autonomy - next_client.distanza_stazione < 0:
+            # In questo caso devo andare a ricaricare nella stazione partendo da current_node
+
             # Effettuo la ricarica
             # Aggiorno:
             #   - Percorso
@@ -115,21 +198,182 @@ def NearestNeighbour(dizionario_citta, dizionario_stazioni, deposito, k, N_CITIE
             #   - Autonomia (Piena)       (N.B. Bisogna in futuro valutare quanto ricaricare)
             #   - Nodo Corrente (Stazione)
 
-            node_station= str(current_client.get_quadrant()) + 'S'
-
-            percorso.append(node_station)
+            node_station= str(current_client.get_quadrant()) + 'S'  # La stazione più vicina è quella del proprio quadrante in quanto è messa in mezzo al quadrante
 
             distanza_percorsa += current_client.distanza_stazione
 
+            percorso.append(node_station)
+
             # delta_autonomia mi indica quanto devo ricaricare 
 
-            delta_autonomia= k - (autonomia - current_client.distanza_stazione)
+            delta_ricarica=  k - autonomia
 
-            tempo_ricarica += 0.25*delta_autonomia
+            autonomia= k    # Effettuo ricarica 
 
-            autonomia= k
+            tempo_ricarica += 0.25*delta_ricarica # Aggiorno il tempo impiegato per ricaricare
             
             current_node= node_station
+
+        else:
+            # Sono nel caso in cui lo spostamento al prossimo nodo mi permette di avere un autonomia tale per cui posso poi raggiungere eventualmente la stazione di ricarica a partire da next_node
+
+            distanza_percorsa += next_distance
+
+            autonomia -= next_distance
+
+            current_node= next_node
+
+            percorso.append(next_node)
+        
+        # print("Percorso: " + str(percorso))
+        # Aggiorno le città visitate
+        n_citta_visitate= calcola_citta_visitate(percorso,dizionario_citta)
+        # print("n_citta_visitate: " + str(n_citta_visitate))
+
+    # ------- FUORI WHILE ---------
+    # Quando esco dal while significa che sono andato in tutte le città e non mi resta altro che tornare al deposito 
+    # Quando esco dal ciclo sono PER FORZA in una citta
+
+    current_client= dizionario_citta.get(current_node)
+
+    # Controllo se ho l'autonomia sufficiente per tornare al deposito, se non ce l'ho mi fermo nella stazione del quadrante
+    if autonomia - current_client.distanza_deposito < 0:
+        # 1) Vado nella stazione di ricarica e aggiorno i valori di:
+        #       - Percorso
+        #       - Distanza Percorsa
+        #       - Autonomia rimasta
+
+        node_station= str(current_client.get_quadrant()) + 'S'
+        percorso.append(node_station)
+
+        distanza_percorsa += current_client.distanza_stazione
+
+        # Aggiorno l'autonomia rimasta
+        autonomia -= current_client.distanza_stazione
+
+
+        # 2) Raggiunto la stazione devo ricaricare l'auto, la ricarico solo dell'autonomia necessaria per tornare al deposito dalla stazione
+        #    in modo da evitare sprechi di tempo
+
+        #    Per prima cosa recupero le coordinate della stazione in cui mi trovo
+        node_station= node_station.replace('S','')
+        coordinate_station= dizionario_stazioni.get(int(node_station))
+
+        # Calcolo la distanza tra la STAZIONE CORRENTE e il deposito   (In questo punto non sono più nell'ultima citta visitata ma sono nella stazione di ricarica che devo partire per tornare al deposito)
+        distanza_stazione_deposito= euclidean_distance(coordinate_station,[0,0])
+
+        # Calcolo quanto devo ricaricare, ovvero io devo ricaricare pari a: distanza_deposito - autonomia rimasta 
+        # dato che di
+        delta_autonomia= distanza_stazione_deposito - autonomia
+
+        autonomia += delta_autonomia 
+
+        tempo_ricarica += 0.25*delta_autonomia
+
+        # 3) Torno al deposito, quindi aggiorno:
+        #       - Percorso
+        #       - Distanza Percorsa
+        percorso.append(0)
+
+        autonomia -= distanza_stazione_deposito
+
+        distanza_percorsa += distanza_stazione_deposito
+ 
+    else:
+    # Qui siamo nel caso in cui dall'ultima città si abbia autonomia sufficiente per tornare al deposito       
+    # In questo caso devo solo aggiornare:
+    #           - Percorso
+    #           - Distanza Percorsa
+        percorso.append(0)
+
+        distanza_percorsa += current_client.distanza_deposito
+
+    tempo_totale= distanza_percorsa + tempo_ricarica
+
+    tempo_totale= round(tempo_totale,2)
+    distanza_percorsa= round(distanza_percorsa,2)
+
+    print("Autonomia fine percorso: " + str(autonomia))   
+    plt.draw_map(percorso, dizionario_citta, dizionario_stazioni, Max_Axis, False)
+
+
+    dizionario_Nearest_Neighbour= {}
+    dizionario_Nearest_Neighbour['percorso']= percorso
+    dizionario_Nearest_Neighbour['distanza']= distanza_percorsa
+    dizionario_Nearest_Neighbour['tempo_tot']= tempo_totale
+    dizionario_Nearest_Neighbour['tempo_ricarica']= tempo_ricarica
+
+
+    return dizionario_Nearest_Neighbour
+
+
+# Tempo di ricarica è dato da 0.25 unita di tempo per unita metrica di autonomia ricaricata
+def NearestNeighbour_ottimizzazione_ricarica(dizionario_citta, dizionario_stazioni, k, N_CITIES, Max_Axis):
+    tempo_ricarica= 0  #Tempo speso a ricaricare
+    distanza_percorsa= 0
+
+    autonomia= k
+    percorso= []
+
+    current_node= 0  # 0 è il deposito
+
+    # Il nodo 0 è il deposito
+    percorso.append(0)
+
+    n_citta_visitate= calcola_citta_visitate(percorso,dizionario_citta)
+
+
+    # Fino a quando non ho visitato tutte le citta cerco il prossimo nodo da visitare
+    while n_citta_visitate < N_CITIES - 1:
+
+        # Se il nodo corrente non è il deposito, prendo l'oggetto cliente relativo
+        if current_node != 0 and 'S' not in str(current_node):
+            current_client= dizionario_citta.get(current_node)
+
+        # print("Percorso: " + str(percorso))
+        # print("autonomia: " + str(autonomia))
+        next_node, next_distance= find_next_node(percorso,current_node,dizionario_citta,dizionario_stazioni)
+
+        # print("next_node_fuori: " + str(next_node))
+        # print("next_distance_fuori: " + str(next_distance))
+        future_autonomy= autonomia - next_distance
+        # print("future_autonomy: " + str(future_autonomy))
+        next_client= dizionario_citta.get(int(next_node))
+
+        # ------- AMMISSIBILITA' DELLA MOSSA -------------
+        # Come NN normale
+
+        if future_autonomy - next_client.distanza_stazione < 0:
+            # Effettuo la ricarica
+            # Aggiorno:
+            #   - Percorso
+            #   - Distanza Percorsa
+            #   - Tempo Ricarica
+            #   - Autonomia (da valutare quanto)
+            #   - Nodo Corrente (Stazione)
+
+            node_station= str(current_client.get_quadrant()) + 'S'
+
+            distanza_percorsa += current_client.distanza_stazione
+
+            percorso.append(node_station)
+            # delta_autonomia mi indica quanto devo ricaricare 
+            print("percorso : " + str(percorso))
+            print("Autonomia: " + str(autonomia))
+
+            # OTTIMIZZAZIONE DELLA RICARICA
+            percorso_futuro= percorso.copy()
+
+            autonomia_residua= calcolo_ricarica(k, node_station, percorso_futuro, dizionario_citta, dizionario_stazioni, N_CITIES)
+
+            print("Autonomia Residua: " + str(autonomia_residua))
+
+            autonomia= k - autonomia_residua
+
+            tempo_ricarica += 0.25*autonomia
+            
+            current_node= node_station
+            print("---------Fine ricarica------------")
 
         else:
             # Sono nel caso in cui lo spostamento al prossimo nodo mi permette di muovermi nella stazione di ricarica
@@ -204,7 +448,7 @@ def NearestNeighbour(dizionario_citta, dizionario_stazioni, deposito, k, N_CITIE
     tempo_totale= round(tempo_totale,2)
     distanza_percorsa= round(distanza_percorsa,2)
 
-    plt.draw_map(percorso, dizionario_citta, dizionario_stazioni, Max_Axis)
+    plt.draw_map(percorso, dizionario_citta, dizionario_stazioni, Max_Axis, True)
 
 
     dizionario_Nearest_Neighbour= {}
@@ -222,19 +466,55 @@ def NearestNeighbour(dizionario_citta, dizionario_stazioni, deposito, k, N_CITIE
 def calcola_dizionario_distanze(dizionario_citta):
     dizionario_distanze_citta= {}
     citta= list(dizionario_citta.keys())
-
+    
     lista_distanze_deposito= [0]
+
+    for n in citta:
+        current_node= dizionario_citta.get(int(n))
+        distanza_deposito= current_node.distanza_deposito
+        distanza_deposito= round(distanza_deposito,2)
+        lista_distanze_deposito.append(distanza_deposito)
+
+    dizionario_distanze_citta[0]= lista_distanze_deposito
+
+    """
+        for n in citta:
+            lista_distanze= []
+            current_node= dizionario_citta.get(int(n))
+            current_coordinate= current_node.coordinate
+            
+            distanza_deposito= current_node.distanza_deposito
+            distanza_deposito= round(distanza_deposito,2)
+
+            lista_distanze.append(distanza_deposito)
+            lista_distanze_deposito.append(distanza_deposito)
+
+            for i in citta:
+                if i != n:
+                    next_node= dizionario_citta.get(int(i))
+                    next_coordinate= next_node.coordinate
+                    distance= euclidean_distance(current_coordinate,next_coordinate)
+                    distance= round(distance,2)
+                    lista_distanze.append(distance)
+                else: 
+                    distance= 0
+                    lista_distanze.append(distance)
+
+            dizionario_distanze_citta[n]= lista_distanze
+
+        dizionario_distanze_citta[0]= lista_distanze_deposito
+    """
 
     for n in citta:
         lista_distanze= []
         current_node= dizionario_citta.get(int(n))
         current_coordinate= current_node.coordinate
         
+        # Siccome è la prima iterazione, aggiungo la distanza del nodo al deposito
         distanza_deposito= current_node.distanza_deposito
         distanza_deposito= round(distanza_deposito,2)
 
         lista_distanze.append(distanza_deposito)
-        lista_distanze_deposito.append(distanza_deposito)
 
         for i in citta:
             if i != n:
@@ -249,12 +529,83 @@ def calcola_dizionario_distanze(dizionario_citta):
 
         dizionario_distanze_citta[n]= lista_distanze
 
-    dizionario_distanze_citta[0]= lista_distanze_deposito
     return dizionario_distanze_citta
+
+
+def Blossom(subgraph, n_vertex):
+    example_path= "./Eduard_Blossom_Algorithm/example"
+    example_path= '\\'.join(example_path.split('/'))
+
+    input_path= "./Eduard_Blossom_Algorithm/input2.txt"
+    input_path= '\\'.join(input_path.split('/'))
+
+    # Devo creare il file di input contenente il numero di vertici, il numero di archi, e gli archi con le varie distanze , a partire dal subgraph
+    """input_file= open(input_path,'w')
+    input_file.write(str(len(n_vertex)) + "\n")
+
+    edge_list= []
+    distance_list=[]
+    for vertex in n_vertex:
+        dict_edges= dict(subgraph.get(int(vertex)))
+
+        for node in list(dict_edges.keys()):
+            # Se l'arco considerato non fa parte della lista degli archi allora lo inserisco ( controllo per evitare simmetrie)
+            if [vertex,node] not in edge_list or [node,vertex] not in edge_list:
+                edge_list.append([vertex,node])
+                distance= int(dict_edges.get(node))
+                distance_list.append(distance)
+
+    # Inserisco il numero di archi
+    input_file.write(str(len(edge_list))  + '\n')
+
+    # Inserisco gli archi nell'input file
+
+    i= 0
+    while i < len(edge_list):
+        input_file.write(str(edge_list[i][0]))
+        input_file.write(' ')
+        input_file.write(str(edge_list[i][1]))
+        input_file.write(' ')
+        input_file.write(str(distance_list[i]))
+        if i != len(edge_list) - 1:
+            input_file.write('\n')
+        i += 1
+
+    input_file.close()"""
+    # Inserisco il sottografo creato dai vertici di grado dispari nel file di input per l'algoritmo Eduard's Blossom
+
+    with Popen([example_path, "-f", input_path, "--minweight"], stdout=PIPE) as proc:
+        res= proc.stdout.read().decode('ascii')
+        # res= proc.stdout.read()
+
+    result= res.split('\n')
+    print("res: " + str(res))
+    print("result: " + str(result))
+    result_list= []
+    for el in result:
+        el= el[0:-1]
+        result_list.append(el)
+    
+    print("resultlines" + str(result_list))
+
+    optimal_cost= result_list[0][-3:]
+    print("optimal_cost: " + str(optimal_cost))
+
+    edge_list= []
+
+    for edge in result_list[2:-1]:
+        edge_list.append(edge)
+
+    print("edge_list" + str(edge_list))
+
+
+
 
 # L'ammissibilità dell' arco trovato qui viene determinata da MinimumSpanningTree
 def ricerca_arco_minimo_mst(dizionario_distanze_citta, dizionario_uso_archi):
 
+    # print("Dizionario_distanze_citta: " + str(dizionario_distanze_citta))
+    # print("Dizionario_uso_archi: "+ str(dizionario_uso_archi))
     distanza_minima_arco= 100000000000
     nodo1= -1
     nodo2= -1
@@ -374,7 +725,7 @@ def verifica_ammissibilita(nodo1,nodo2,dizionario_sottoAlberi):
             dizionario_sottoAlberi[newKey]= nodi_insieme1 + nodi_insieme2
             return True
         
-        elif insiemeNodo1 == insiemeNodo2:
+        elif insiemeNodo1 == insiemeNodo2 and insiemeNodo1 != -1 and insiemeNodo2 != -1:
             return False
 
 def find_odd_degree_verteces(nodi,archi_usati):
@@ -383,6 +734,7 @@ def find_odd_degree_verteces(nodi,archi_usati):
 
     odd_degree_verteces_list= []
 
+    # Mi segno per ogni nodo quanti archi sono collegati ad esso
     for nodo in nodi:
         occ= 0
 
@@ -400,7 +752,7 @@ def find_odd_degree_verteces(nodi,archi_usati):
     return odd_degree_verteces_list
 
 def find_greater_2_degree_verteces(unione_PM_MST_graph, dizionario_citta):
-
+    # CERCARE I DOPPI ARCHI TRA 2 VERTICI
     greater_2_verteces= []
 
     nodi_list1= [0]
@@ -437,7 +789,7 @@ def MinimumSpanningTree(dizionario_citta):
 
     # Creo lista d'appoggio per evitare di selezionare archi che creerebbero cicli, gli archi che andrò a selezionare non devono collegarsi ad un nodo gia utilizzato
     nodi= list(dizionario_citta.keys())
-    nodi.append(0)
+    nodi.insert(0,0)    # !!! Modificato, prima era nodi.appen(0), così facendo però si aggiunge in coda lo 0
 
     # Lista dei nodi visitati
     nodi_visitati=[]
@@ -466,7 +818,6 @@ def MinimumSpanningTree(dizionario_citta):
 
         peso_arco, nodo1, nodo2= ricerca_arco_minimo_mst(dizionario_distanze_citta, dizionario_uso_archi)
         
-
 
         if verifica_ammissibilita(nodo1,nodo2,dizionario_sottoAlberi):
 
@@ -501,13 +852,21 @@ def MinimumSpanningTree(dizionario_citta):
     return archi_usati
 
 def create_induced_subgraph(dizionario_citta, odd_degree_verteces):
-    
+    # Devo creare un grafo dove ogni nodo di grado dispari è collegato ad ogni altro nodo di grado dispari
     subgraph= {}
 
     # Devo creare gli archi che connettono ogni nodo con tutti gli altri
     for vertice in odd_degree_verteces:
+        # Al posto di ricreare il dizionario delle distanze potrei sfruttare quello che ho già creato in precedenza per creare l'mst
         dizionario_distanze= {}
 
+        if vertice != 0:
+            element_vertice= dizionario_citta.get(int(vertice))
+            coordinate_vertice= element_vertice.coordinate
+        else:
+            coordinate_vertice= [0,0]
+
+        # Per ogni altro nodo di grado dispari
         for nodo in odd_degree_verteces:
             if nodo != vertice:
                 if nodo != 0:
@@ -516,13 +875,7 @@ def create_induced_subgraph(dizionario_citta, odd_degree_verteces):
                 else:
                     coordinate_nodo= [0,0]
 
-                if vertice != 0:
-                    element_vertice= dizionario_citta.get(int(vertice))
-                    coordinate_vertice= element_vertice.coordinate
-                else:
-                    coordinate_vertice= [0,0]
-
-                distanza_arco= round(euclidean_distance(coordinate_vertice,coordinate_nodo),2)
+                distanza_arco= euclidean_distance(coordinate_vertice,coordinate_nodo)
                 dizionario_distanze[nodo]= distanza_arco
 
         subgraph[vertice]= dizionario_distanze
@@ -587,7 +940,8 @@ def find_perfect_matching(subgraph):
             diz_archi_usati2[nodo1]= 2
 
     return perfect_matching
-        
+
+# CreateDictGraph mi crea un dizionario che tiene conto di tutti gli archi nati dall'unione 
 def createDictGraph(perfect_matching_graph, mst_graph, dizionario_citta):
     
     dict_multi_graph_s= {}
@@ -601,14 +955,15 @@ def createDictGraph(perfect_matching_graph, mst_graph, dizionario_citta):
 
     # Ora devo assegnare i vari archi ai nodi
     # Archi del Perfect-Matching
+    # associo un dizionario vuoto ad ogni arco del perfect matching
     for edge in perfect_matching_graph:
-        dict_list= dict_multi_graph_s[edge[0]]
-
+        # Per ogni arco
+        dict_list= dict_multi_graph_s[edge[0]] # arco identificato dal primo nodo
         dict_list_nodes= list(dict_list.keys())
 
         # Se un arco tra i due nodi esiste gia, faccio l'append e aggiungo la distanza del secondo arco ( che dovrebbe avere distanza uguale ) 
         if edge[1] in dict_list_nodes:
-            dict_list[edge[1]].append(int(round(edge[2],0)))
+            dict_list[edge[1]].append(int(edge[2]))
         else:
             # Se un arco tra i due nodi non esiste, creo una lista con la distanza di un arco soltanto
             distanza= [edge[2]]
@@ -619,7 +974,7 @@ def createDictGraph(perfect_matching_graph, mst_graph, dizionario_citta):
         dict_list_nodes2= list(dict_list2.keys())
 
         if edge[0] in dict_list_nodes2:
-            dict_list2[edge[0]].append(int(round(edge[2],0)))
+            dict_list2[edge[0]].append(int(edge[2]))
         else:
             # Se un arco tra i due nodi non esiste, creo una lista con la distanza di un arco soltanto
             distanza= [edge[2]]
@@ -633,10 +988,10 @@ def createDictGraph(perfect_matching_graph, mst_graph, dizionario_citta):
 
         # Se un arco tra i due nodi esiste gia, faccio l'append e aggiungo la distanza del secondo arco ( che dovrebbe avere distanza uguale ) 
         if edge[1] in dict_list_nodes:
-            dict_list[edge[1]].append(int(round(edge[2],0)))
+            dict_list[edge[1]].append(int(edge[2]))
         else:
             # Se un arco tra i due nodi non esiste, creo una lista con la distanza di un arco soltanto
-            distanza= [int(round(edge[2],0))]
+            distanza= [int(edge[2])]
             dict_list[edge[1]]= distanza
 
         # Devo fare il simmetrico
@@ -644,10 +999,10 @@ def createDictGraph(perfect_matching_graph, mst_graph, dizionario_citta):
         dict_list_nodes2= list(dict_list2.keys())
 
         if edge[0] in dict_list_nodes2:
-            dict_list2[edge[0]].append(int(round(edge[2],0)))
+            dict_list2[edge[0]].append(int(edge[2]))
         else:
             # Se un arco tra i due nodi non esiste, creo una lista con la distanza di un arco soltanto
-            distanza= [int(round(edge[2],0))]
+            distanza= [int(edge[2])]
             dict_list2[edge[0]]= distanza
 
     return dict_multi_graph_s
@@ -664,23 +1019,48 @@ def check_connection_multigraph(u,w,v,archi_v,dict_multi_graph_s):
 
     new_dict= copy.deepcopy(dict_multi_graph_s)
 
-    # Cancello arco (v,u)
-    node_v.pop(u)
-    # cancello arco (v,w)
-    node_v.pop(w)
+    # Cancello arco (v,u)  NB!!! Se però ci sono due archi v,u in un colpo solo li tolgo tutti e due , ed è sbagliato perchè dopo avrò che il grafo potrebbe non essere connesso
+    edge_v_u= node_v.pop(u)
+    if len(edge_v_u) > 1:
+        # print("edge_v_u dentro check: " + str(edge_v_u))
+        edge_v_u= edge_v_u[0:-1] # cancello un arco
+        node_v[u]= edge_v_u # reinserisco l'arco
+    # Se la condizione non è verificata ho semplicemente effettuato la pop e quindi cancellato il singolo arco
 
+    # cancello arco (v,w)
+    edge_v_w= node_v.pop(w)
+    if len(edge_v_w) > 1:
+        edge_v_w= edge_v_w[0:-1]
+        node_v[w]= edge_v_w
+    
     # una volta aggiornato i collegamenti di v ( che sono le chiavi del dizionario che tiro fuori con new_dict.pop(v)) reinserisco il nodo v nel dizionario
     new_dict[v]= node_v
 
     # tolto gli archi (uv), (vw) e aggiungo (u,w)
     node_u= new_dict.pop(u)
-    
+
+    # devo togliere anche qui gli archi tolti da node_v
+    if len(node_u[v]) > 1:
+        edge_u_v= node_u.pop(v)
+        edge_u_v= edge_u_v[0:-1]
+        node_u[v]= node_u
+    else:
+        node_u.pop(v)
     # Al nodo u inserisco il collegamento con w ( e poi faro il viceversa), per aggiungere questo collegamento basta aggiungere la chiave w , l'importante è che ci sia la chiave, il valore corrispettivo a tale chiave non è importante
     # perchè qui devo solo guardare i nodi, non i valori degli archi
     node_u[w]= 1000
     new_dict[u]= node_u
+    
 
     node_w= new_dict.pop(w)
+
+    if len(node_w[v]) > 1:
+        edge_w_v= node_w.pop(v)
+        edge_w_v=  edge_w_v[0:-1]
+        node_w[v]= edge_w_v
+    else:
+        node_w.pop(v)
+    
 
     node_w[u]= 1000
     new_dict[w]= node_w
@@ -719,13 +1099,16 @@ def check_connection_multigraph(u,w,v,archi_v,dict_multi_graph_s):
     # Quando non ho più nodi nello stack esco dal while, ora controllo la lista nodi_visitati, se sono tutti a 1 allora il grafo è collegato, se c'è un nodo a 0 significa che non è stato visitato e quindi il grafo non è collegato
     
     if 0 in nodi_visitati:
+        print("False")
         return False
     else:
+        print("True")
         return True
 
-def create_christofides_graph(perfect_matching_graph, mst_graph, dizionario_citta):
-    
-    pm_archi= []
+
+# def create_christofides_graph(perfect_matching_graph, mst_graph, dizionario_citta, Max_Axis):
+def create_christofides_graph(mst_graph, dizionario_citta, Max_Axis):    
+    """pm_archi= []
     for element in perfect_matching_graph:
         pm_archi.append([element[0],element[1]])
 
@@ -733,14 +1116,56 @@ def create_christofides_graph(perfect_matching_graph, mst_graph, dizionario_citt
     for element in mst_graph:
         mst_archi.append([element[0],element[1]])
 
-    multi_graph_S= pm_archi + mst_archi
+    multi_graph_S= pm_archi + mst_archi"""
+    # !!!!!!!!!!!!!!!!!ANDARE AVANTI DAL DI QUI!!!!!!!!!!!!!!!!!!!!!!!!!!!  ( HO CAMBIATO LA CREAZIONE DEL PERFECT GRAPH)
+    # dict_multi_graph_s= createDictGraph(perfect_matching_graph, mst_graph, dizionario_citta) # dict_multi_graph_s contiene tutti gli archi del grafo s nato dall'unione del mst e  del perfect matching
 
-    dict_multi_graph_s= createDictGraph(perfect_matching_graph, mst_graph, dizionario_citta)
-    # print("dict_multi_graph_s: " + str(dict_multi_graph_s))
-    plt.draw_multigraph(dict_multi_graph_s, dizionario_citta, 20)
-    # Per prima cosa devo trovare i nodi con grado > 2
+    # dict_multi_graph_s= create_dict_s_graph(mst_graph,dizionario_citta)
     
-    greater_2_verteces= find_greater_2_degree_verteces(multi_graph_S, dizionario_citta)
+
+    dict_multi_graph_s= {}
+    citta=[]
+
+    for edge in mst_graph:
+        if edge[0] not in citta:
+            citta.append(edge[0])
+        if edge[1] not in citta:
+            citta.append(edge[1])
+    print("Citta: " + str(citta))
+    for cit in citta:
+
+        distanze= {}
+
+        for cit2 in citta:
+            if cit2 != cit:
+                
+                if cit == 0:
+                    coordinate1= [0,0]
+                else:
+                    coord1= dizionario_citta.get(cit)
+                    coordinate1= coord1.coordinate
+
+                if cit2 == 0:
+                    coordinate2= [0,0]
+                else:
+                    coord2= dizionario_citta.get(cit2)
+                    coordinate2= coord2.coordinate
+                
+                distanze[cit2]= euclidean_distance(coordinate1,coordinate2)
+        
+        dict_multi_graph_s[cit]= distanze
+
+
+
+
+    print("------------------------------------------------------------------")
+
+
+    print("dict_multi_graph_s: " + str(dict_multi_graph_s))
+    plt.draw_multigraph(dict_multi_graph_s, dizionario_citta, Max_Axis)
+    
+    # 1)Per prima cosa devo trovare i nodi con grado > 2
+    greater_2_verteces= find_greater_2_degree_verteces(dict_multi_graph_s, dizionario_citta)
 
     # print("greater_2_verteces: " + str(greater_2_verteces))
     # n modo iterativo, 
@@ -762,77 +1187,110 @@ def create_christofides_graph(perfect_matching_graph, mst_graph, dizionario_citt
 
         archi_v= dict_multi_graph_s.pop(int(vertex))
         nodi2_list= list(archi_v.keys())
-        #print("archi_v: " + str(archi_v))
+        print("Vertex: " + str(vertex))
+        print("nodi2_list: " + str(nodi2_list))
         for u in nodi2_list:
-            #print("archi_v.get(int(u)): " + str(archi_v.get(int(u))))
-            weight_edge_u_v=  list(archi_v.get(int(u)))
-            weight_edge_u_v= weight_edge_u_v[0]
+            print("u: " + str(u))
+            weight_u_v=  list(archi_v.get(int(u)))
+            weight_edge_u_v= weight_u_v[0]
             for w in nodi2_list:
+                print("w: " + str(w))
                 # Qui devo verificare che se togliessi u,v e v,w aggiungendo u,w il grafo rimarrebbe connesso, se non rimane connesso la scelta va scartata
                 if w != u and check_connection_multigraph(u,w,vertex,archi_v,dict_multi_graph_s):
-                    weight_edge_v_w= list(archi_v.get(int(w)))
-                    weight_edge_v_w= weight_edge_v_w[0]
+                    weight_v_w= list(archi_v.get(int(w)))
+                    weight_edge_v_w= weight_v_w[0]
                     if u == 0:
                         coordinate_u= [0,0]
                     else:
-                        coordinate_u= dizionario_citta.get(int(u)).coordinate
+                        coord_u= dizionario_citta.get(int(u))
+                        coordinate_u= coord_u.coordinate
                     
                     if w == 0:
                         coordinate_w= [0,0]
                     else:
-                        coordinate_w= dizionario_citta.get(int(w)).coordinate
+                        coord_w= dizionario_citta.get(int(w))
+                        coordinate_w=coord_w.coordinate
 
-                    weight_edge_u_w= int(round(euclidean_distance(coordinate_u,coordinate_w),0))    
-                    # print("weight_edge_u_w: "+ str(weight_edge_u_w))
+                    weight_edge_u_w= euclidean_distance(coordinate_u,coordinate_w)  
+
                     cost= weight_edge_u_v + weight_edge_v_w - weight_edge_u_w
-                    # print("Cost: " + str(cost))
+                    
+                    """print("max_cost: " + str(max_cost))
+                    print("weight_edge_u_v: " + str(weight_edge_u_v))
+                    print("weight_edge_v_w: " + str(weight_edge_v_w))
+                    print("weight_edge_u_w: " + str(weight_edge_u_w))
+                    print("Cost: " + str(cost))
+                    print("Vertex: " + str(vertex))
+                    print("u: " + str(u))
+                    print("w: " + str(w))
+                    print("weight_edge_u_v: " + str(weight_edge_u_v))
+                    print("weight_edge_v_w: " + str(weight_edge_v_w))
+                    print("weight_edge_u_w: " + str(weight_edge_u_w))
+
+                    print("Cost: " + str(cost))
+                    print("max_cost: " + str(max_cost))"""
+                    
                     if cost >= max_cost:
                         max_cost= cost
                         U= u
                         V= vertex
                         W= w
                         weight_edge_U_W= weight_edge_u_w
+        
+
+        """print("V: " + str(V))
+        print("U: " + str(U))
+        print("W: " + str(W))
+        print("max_cost: " + str(max_cost))"""
 
         # Finito il ciclo tra gli archi vado a cancellare gli archi che devo cancellare (u,v) e (v,w) e aggiungere l'arco che devo aggiungere (u,w)
+        '''print("U: "+ str(U))
+        print("V: " + str(V))
+        print("W: " + str(W))
+        print("arco_v: " + str(archi_v))
+        print("max_cost: " + str(max_cost))'''
+        if U != -1 and W != -1:
+            # Cancello (v,u)
+            arco_v_u= archi_v.pop(U)
 
-        # Cancello (v,u)
-        arco_v_u= archi_v.pop(U)
+            # Se ci sono due stessi archi ne elimino solo 1 e l'altro lo lascio
+            if len(arco_v_u) > 1:
+                archi_v[U]= [arco_v_u[0]]
 
-        # Se ci sono due stessi archi ne elimino solo 1 e l'altro lo lascio
-        if len(arco_v_u) > 1:
-            archi_v[U]= [arco_v_u[0]]
+            # cancello il simmetrico(u,v) 
 
-        # cancello il simmetrico(u,v) 
+            archi_u= dict_multi_graph_s.pop(int(U))
+            
+            arco_u_v= archi_u.pop(V)
 
-        archi_u= dict_multi_graph_s.pop(int(U))
-        
-        arco_u_v= archi_u.pop(V)
+            if len(arco_u_v) > 1:
+                archi_u[V]= [arco_u_v[0]]
 
-        if len(arco_u_v) > 1:
-            archi_u[V]= [arco_u_v[0]]
+            # Aggiungo l'arco (u,w)
+            archi_u[W]= [weight_edge_U_W]
+            dict_multi_graph_s[U]= archi_u
 
-        # Aggiungo l'arco (u,w)
-        archi_u[W]= [weight_edge_U_W]
-        dict_multi_graph_s[U]= archi_u
+            # Cancello (v,w)
+            arco_v_w= archi_v.pop(W)
 
-        # Cancello (v,w)
-        arco_v_w= archi_v.pop(W)
+            if len(arco_v_w) > 1:
+                archi_v[W]= [arco_v_w[0]]
+            
+            # cancello il simmetrico(w,v)
+            archi_w= dict_multi_graph_s.pop(int(W))
+            arco_w_v= archi_w.pop(V)
 
-        if len(arco_v_w) > 1:
-            archi_v[W]= [arco_v_w[0]]
-        
-        # cancello il simmetrico(w,v)
-        archi_w= dict_multi_graph_s.pop(int(W))
-        arco_w_v= archi_w.pop(V)
+            if len(arco_w_v) > 1:
+                archi_w[V]= [arco_w_v[0]]
+            
+            # Aggiungo l'arco (w,u)
+            archi_w[U]= [weight_edge_U_W]
+            dict_multi_graph_s[W]= archi_w
 
-        if len(arco_w_v) > 1:
-            archi_w[V]= [arco_w_v[0]]
-        
-        # Aggiungo l'arco (w,u)
-        archi_w[U]= [weight_edge_U_W]
-        dict_multi_graph_s[W]= archi_w
-
-        dict_multi_graph_s[V]= archi_v
+            dict_multi_graph_s[V]= archi_v
+        else:
+            print("!!!1!1FALZOOOOOOOOOO!!!!")
+            time.sleep(5)
 
     return dict_multi_graph_s
 
@@ -858,6 +1316,7 @@ def create_green_graph(christofides_graph_no_recharge, dizionario_stazioni, dizi
     linked_nodes= list(dict_nodo_dep.keys())
     previous_node= current_node
 
+    # Cerco il nodo più vicino al deposito
     for node in linked_nodes:
         dist_node= dict_nodo_dep.get(int(node))
         if dist_node[0] <= min_dist:
@@ -886,12 +1345,12 @@ def create_green_graph(christofides_graph_no_recharge, dizionario_stazioni, dizi
             if node != previous_node:
                 next_node= node
 
-
+        # print("dict_current_node: " +  str(dict_current_node))
+        print("next_node: " + str(next_node))
         distanza_next_node= dict_current_node.get(int(next_node))
-
+        print("distanza_next_node: " + str(distanza_next_node))
         future_autonomy= autonomia - distanza_next_node[0]
 
-        # print("next_node: " + str(next_node))
         if next_node == 0:
             if 'S' in str(current_node):
                 current_node= current_node.replace("S","")
@@ -951,11 +1410,67 @@ def create_green_graph(christofides_graph_no_recharge, dizionario_stazioni, dizi
     tempo_totale= tempo_ricarica + distanza_percorsa
     return christofides_graph_no_recharge, distanza_percorsa, tempo_ricarica, percorso, tempo_totale
 
-def Christofides_Algorithm(dizionario_citta, dizionario_stazioni, Max_Axis, k):
+def minimum_weight_matching(MST, G, odd_vert):  # MST è una lista di triple, (v1 v2 distanza),  G è un dizionario di dizionari, odd_vert è una lista di vertici
+    import random
+    random.shuffle(odd_vert)
 
+    while odd_vert:
+        v = odd_vert.pop()
+        length = float("inf")
+        u = 1
+        closest = 0
+        for u in odd_vert:
+            if v != u and G[v][u] < length:
+                length = G[v][u]
+                closest = u
+
+        MST.append((v, closest, length))
+        odd_vert.remove(closest)
+
+def create_distance_dict(dizionario_citta):
+    G= {}
+
+    citta= list(dizionario_citta.keys())
+    
+    collegamenti={}
+    for citt in citta:
+        coord1= dizionario_citta.get(citt)
+        coordinate1= coord1.coordinate
+
+        collegamenti[citt]= euclidean_distance([0,0],coordinate1)
+    
+    G[0]= collegamenti
+
+    for citt in citta:
+        collegamenti={}
+        if 0 not in citta:
+            citta.insert(0,0)
+        
+        for citt2 in citta:
+            if citt2 != citt:
+                if citt2 == 0:
+                    coordinate2= [0,0]
+                else:
+                    coord2= dizionario_citta.get(citt2)
+                    coordinate2= coord2.coordinate
+
+                coord1= dizionario_citta.get(citt)
+                coordinate1= coord1.coordinate
+
+
+                collegamenti[citt2]= euclidean_distance(coordinate1, coordinate2)
+        
+        G[citt]= collegamenti
+    
+    return G
+
+def Christofides_Algorithm(dizionario_citta, dizionario_stazioni, Max_Axis, k):
+    G= create_distance_dict(dizionario_citta)
+    print("G: " + str(G))
     # 1) Trovare MST del grafo
     # dizionario_distanze_citta, dizionario_uso_archi, distanza_mst, mst_graph= MinimumSpanningTree(dizionario_citta)  # archi_usati[element1,element2,..], element= [nodoA,nodoB, peso arco] 
     mst_graph= MinimumSpanningTree(dizionario_citta)
+    print("mst_graph: ", str(mst_graph))
     # Creo il plot
     plt.draw_mst(dizionario_citta, Max_Axis, mst_graph)
 
@@ -965,21 +1480,25 @@ def Christofides_Algorithm(dizionario_citta, dizionario_stazioni, Max_Axis, k):
     # 2) Ottenere l'insieme dei vertici di grado dispari del mst
     odd_degree_verteces=  find_odd_degree_verteces(nodi,mst_graph)
 
-
+    print("odd_degree_vertex: " + str(odd_degree_verteces))
     # 3) Creare il sottografo indotto dati i vertici di grado dispari trovati prima, da questo grafo, trovare il Perfect Matching di peso minimo
-    subgraph= create_induced_subgraph(dizionario_citta, odd_degree_verteces)
-    perfect_matching_graph= find_perfect_matching(subgraph)
-
+    # add minimum weight matching edges to MST, ovvero, confronto tutti i nodi dispari e cerco di collegarli con i nodi dispari con distanza minore
+    """subgraph= create_induced_subgraph(dizionario_citta, odd_degree_verteces)
+    print("Subgraph: " + str(subgraph))
+    perfect_matching_graph= find_perfect_matching(subgraph)  # Perfect matching consiste nel creare l'accoppiamento perfetto di costo minimo tra ogni coppia di nodi
+    """
+    minimum_weight_matching(mst_graph,G,odd_degree_verteces)
+    print("mst_graph dopo: " + str(mst_graph))
     # Creo il plot
-    subgraph_keys= list(subgraph.keys())
-    plt.draw_perfect_matching(dizionario_citta, Max_Axis, subgraph_keys, perfect_matching_graph)
+    """subgraph_keys= list(subgraph.keys()) 
+    plt.draw_perfect_matching(dizionario_citta, Max_Axis, subgraph_keys, perfect_matching_graph)"""
 
     # 4) n modo iterativo, 
 	# ∀ nodo v di grado >2, 
 	# - considera la coppia di archi (u,v) e (v,w) in S che massimizza cuv+cvw–cuw, con (u,w)∉S, mantenendo la connessione, 
 	# - sostituisci gli archi (u,v) e (v,w) con l’arco (u,w), garantendo la connessione di S
 
-    christofides_graph_no_recharge= create_christofides_graph(perfect_matching_graph, mst_graph, dizionario_citta)
+    christofides_graph_no_recharge= create_christofides_graph(mst_graph, dizionario_citta, Max_Axis)
 
     # print("christofide_graph_no_recharge: " + str(christofides_graph_no_recharge))
     

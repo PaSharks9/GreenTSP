@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
 
-def draw_map(percorso, dizionario_citta, dizionario_stazioni, Max_Axis):
+def draw_map(percorso, dizionario_citta, dizionario_stazioni, Max_Axis, ottimizzazione):
     # -------------------- Creo SubPlot --------------------
     figNN= plt.figure() 
     # -------------------- INIZIALIZZO GRAFICO --------------------
@@ -61,8 +61,10 @@ def draw_map(percorso, dizionario_citta, dizionario_stazioni, Max_Axis):
     # Disegno il deposito che si trova in coordinate [0,0]
     plt.scatter(0,0,s=50, edgecolors='none', c='blue', label="Deposito")
 
-    plt.savefig('img/NearestNeighbour/TSPMap.jpg')
-
+    if ottimizzazione is False:
+        plt.savefig('img/NearestNeighbour/TSPMap.jpg')
+    else:
+        plt.savefig('img/Nearest_Neighbour_ott_ricarica/TSPMap.jpg')
     
     # ------------------------- Disegno del Tour -------------------------
     current_index= 0
@@ -111,9 +113,13 @@ def draw_map(percorso, dizionario_citta, dizionario_stazioni, Max_Axis):
 
     plt.grid(True)
 
-    plt.savefig('img/NearestNeighbour/NearestNeighbour_GreenTSP.jpg')
+    if ottimizzazione is False:
+        plt.savefig('img/NearestNeighbour/NearestNeighbour_GreenTSP.jpg')
+    else:
+        plt.savefig('img/Nearest_Neighbour_ott_ricarica/NearestNeighbour_Ottimizzazione_Ricarica.jpg')
 
     plt.close(figNN)
+
 
 def draw_mst(dizionario_citta, Max_Axis, archi_usati):
     # -------------------- Creo SubPlot --------------------
@@ -528,3 +534,192 @@ def draw_Christofides_green(christofides_graph, dizionario_citta, dizionario_sta
     filename= "Christofides_Green_Map.jpg" 
     plt.savefig(directory+filename)
     plt.close(figCG)
+
+
+
+
+def print_2_opt_arc_selected(percorso, archi_selezionati, dizionario_citta, dizionario_stazioni, Max_Axis):
+    # -------------------- Creo SubPlot --------------------
+    figLSAS= plt.figure() 
+    # -------------------- INIZIALIZZO GRAFICO --------------------
+    plt.title('GreenTSP Map')
+    plt.grid(True)
+
+    pointsCity_List= list(dizionario_citta.keys())
+
+    pointsStation_List= list(dizionario_stazioni.keys())
+
+    # Do valori agli assi cartesiani
+    plt.axis([-Max_Axis-1, Max_Axis+1, -Max_Axis-1, Max_Axis+1])
+
+    plt.xticks([1*k for k in range(-Max_Axis,Max_Axis+1)])
+    plt.yticks([1*k for k in range(-Max_Axis,Max_Axis+1)])
+    # Creo i 4 quadranti disegnando semplicemente la retta verticale e la retta orizzontale
+    plt.axvline(0,0,color='black')
+
+    plt.axhline(0,0,color='black')
+
+    x_city_coordinates=[]
+    y_city_coordinates=[]
+
+    x_stations_coordinates=[]
+    y_stations_coordinates=[]
+
+    # Disegno i punti
+    for key in pointsCity_List:
+        cliente= dizionario_citta.get(key)
+        x_city_coordinates.append(cliente.coordinate[0])
+        y_city_coordinates.append(cliente.coordinate[1])
+
+    plt.scatter(x_city_coordinates, y_city_coordinates, s=20, edgecolors='none', c='green', label="Cliente")
+    # Do i nomi ai punti
+    for key in pointsCity_List:
+        plt.annotate(str(key), (x_city_coordinates[key - 1],y_city_coordinates[key - 1]))
+
+
+    for key in pointsStation_List:
+        coordinate= dizionario_stazioni.get(key)
+        x_stations_coordinates.append(coordinate[0])
+        y_stations_coordinates.append(coordinate[1])
+    
+    plt.scatter(x_stations_coordinates, y_stations_coordinates, marker='x', s=50, edgecolors='none', c='red', label="Stazioni di Ricarica")
+   
+    #Do i nomi alle stazioni
+    for key in pointsStation_List:
+        name_station= str(key) + "S"
+        plt.annotate(name_station, (x_stations_coordinates[key - 1],y_stations_coordinates[key - 1]))
+
+    #Do il nome al deposito
+    plt.annotate('D', (0,0))
+
+
+    # Disegno il deposito che si trova in coordinate [0,0]
+    plt.scatter(0,0,s=50, edgecolors='none', c='blue', label="Deposito")
+
+    
+    # --------------------- Disegno Righe ----------------------------------
+    i= 0
+    lunghezza_percorso= len(percorso)
+    while i < lunghezza_percorso - 1:
+        vertex1= percorso[i]
+
+        if 'S' in str(vertex1):
+            coordinate_vertex1= dizionario_stazioni.get(int(vertex1.replace('S','')))        
+        elif vertex1 == 0:
+            coordinate_vertex1= [0,0]
+        else:
+            coordinate1= dizionario_citta.get(int(vertex1))
+            coordinate_vertex1= coordinate1.coordinate
+
+        vertex2= percorso[i+1]
+
+        if 'S' in str(vertex2):
+            coordinate_vertex2= dizionario_stazioni.get(int(vertex2.replace('S','')))
+       
+        elif vertex2 == 0:
+            coordinate_vertex2= [0,0]
+        else:
+            coordinate2= dizionario_citta.get(int(vertex2))
+            coordinate_vertex2= coordinate2.coordinate 
+
+        if [vertex1,vertex2] in archi_selezionati:
+            plt.plot([coordinate_vertex1[0],coordinate_vertex2[0]],[coordinate_vertex1[1],coordinate_vertex2[1]], color='red')
+        else:
+            plt.plot([coordinate_vertex1[0],coordinate_vertex2[0]],[coordinate_vertex1[1],coordinate_vertex2[1]], color='green')
+        i += 1
+    
+    directory= "img/"
+    filename= "LS_Archi_Selezionati.jpg" 
+    plt.savefig(directory+filename)
+    plt.close(figLSAS)
+
+
+def print_2_opt(percorso, dizionario_citta, dizionario_stazioni, Max_Axis):
+    # -------------------- Creo SubPlot --------------------
+    figLS= plt.figure() 
+    # -------------------- INIZIALIZZO GRAFICO --------------------
+    plt.title('GreenTSP Map')
+    plt.grid(True)
+
+    pointsCity_List= list(dizionario_citta.keys())
+
+    pointsStation_List= list(dizionario_stazioni.keys())
+
+    # Do valori agli assi cartesiani
+    plt.axis([-Max_Axis-1, Max_Axis+1, -Max_Axis-1, Max_Axis+1])
+
+    plt.xticks([1*k for k in range(-Max_Axis,Max_Axis+1)])
+    plt.yticks([1*k for k in range(-Max_Axis,Max_Axis+1)])
+    # Creo i 4 quadranti disegnando semplicemente la retta verticale e la retta orizzontale
+    plt.axvline(0,0,color='black')
+
+    plt.axhline(0,0,color='black')
+
+    x_city_coordinates=[]
+    y_city_coordinates=[]
+
+    x_stations_coordinates=[]
+    y_stations_coordinates=[]
+
+    # Disegno i punti
+    for key in pointsCity_List:
+        cliente= dizionario_citta.get(key)
+        x_city_coordinates.append(cliente.coordinate[0])
+        y_city_coordinates.append(cliente.coordinate[1])
+
+    plt.scatter(x_city_coordinates, y_city_coordinates, s=20, edgecolors='none', c='green', label="Cliente")
+    # Do i nomi ai punti
+    for key in pointsCity_List:
+        plt.annotate(str(key), (x_city_coordinates[key - 1],y_city_coordinates[key - 1]))
+
+
+    for key in pointsStation_List:
+        coordinate= dizionario_stazioni.get(key)
+        x_stations_coordinates.append(coordinate[0])
+        y_stations_coordinates.append(coordinate[1])
+    
+    plt.scatter(x_stations_coordinates, y_stations_coordinates, marker='x', s=50, edgecolors='none', c='red', label="Stazioni di Ricarica")
+   
+    #Do i nomi alle stazioni
+    for key in pointsStation_List:
+        name_station= str(key) + "S"
+        plt.annotate(name_station, (x_stations_coordinates[key - 1],y_stations_coordinates[key - 1]))
+
+    #Do il nome al deposito
+    plt.annotate('D', (0,0))
+
+
+    # Disegno il deposito che si trova in coordinate [0,0]
+    plt.scatter(0,0,s=50, edgecolors='none', c='blue', label="Deposito")
+
+    
+    # --------------------- Disegno Righe ----------------------------------
+    i= 0
+    lunghezza_percorso= len(percorso)
+    while i < lunghezza_percorso - 1:
+        vertex1= percorso[i]
+
+        if 'S' in str(vertex1):
+            coordinate_vertex1= dizionario_stazioni.get(int(vertex1.replace('S','')))           
+        elif vertex1 == 0:
+            coordinate_vertex1= [0,0]
+        else:
+            coordinate1= dizionario_citta.get(int(vertex1))
+            coordinate_vertex1= coordinate1.coordinate
+
+        vertex2= percorso[i+1]
+
+        if 'S' in str(vertex2):
+            coordinate_vertex2= dizionario_stazioni.get(int(vertex2.replace('S','')))
+        elif vertex2 == 0:
+            coordinate_vertex2= [0,0]
+        else:
+            coordinate2= dizionario_citta.get(int(vertex2))
+            coordinate_vertex2= coordinate2.coordinate 
+
+        plt.plot([coordinate_vertex1[0],coordinate_vertex2[0]],[coordinate_vertex1[1],coordinate_vertex2[1]], color='green')
+        i += 1
+    directory= "img/"
+    filename= "LocalSearch.jpg" 
+    plt.savefig(directory+filename)
+    plt.close(figLS)
