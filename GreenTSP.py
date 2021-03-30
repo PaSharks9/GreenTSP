@@ -6,7 +6,7 @@ from PlotGenerator import draw_map, print_2_opt, print_2_opt_arc_selected
 from ConstructiveEuristic import NearestNeighbour, Christofides_Algorithm, NearestNeighbour_ottimizzazione_ricarica, MinimumSpanningTree, find_odd_degree_verteces, create_induced_subgraph, find_perfect_matching
 from Cliente import euclidean_distance
 from LocalSearch import two_opt
-from christofides import tsp
+
 
 
 if __name__ == "__main__":
@@ -56,19 +56,9 @@ if __name__ == "__main__":
             endt_NN= time.time()
             print("Tempo esecuzione: " + str(endt_NN - start_NN))
             print("... Fine Esecuzione Nearest_Neighbour...")
-            print("... Esecuzione Christofides1 ...")
+            print("... Esecuzione Christofides ...")
             start_Christofides= time.time()
             dizionario_Christofides= Christofides_Algorithm(dizionario_citta, dizionario_stazioni, Max_Axis, k)
-            print("... Fine Esecuzione Christofides1...")
-            print("... Esecuzione Christofides2 ...")
-            data=[]
-            for citta in list(dizionario_citta.keys()):
-                coord= dizionario_citta.get(citta)
-                coordinate_citta= coord.coordinate
-                data.append(coordinate_citta)
-
-            tsp(data)
-            print("... Fine Esecuzione Christofides2...")
             end_Christofides= time.time()
             print("Tempo esecuzione: " + str(end_Christofides - start_Christofides))
             print("... Fine Esecuzione Christofides...")
