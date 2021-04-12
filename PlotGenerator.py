@@ -515,6 +515,8 @@ def draw_Christofides_green(christofides_graph, dizionario_citta, dizionario_sta
 
             if u != 0:
                 if 'S' in str(u):
+                    print("Dentro Plot Generator")
+                    print("u: " + str(u))
                     key = u.replace('S','')
                     coordinate2= dizionario_stazioni.get(int(key))
                 else:

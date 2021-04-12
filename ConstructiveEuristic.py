@@ -5,7 +5,6 @@ import PlotGenerator as plt
 from Cliente import Cliente, euclidean_distance
 from subprocess import PIPE, Popen
 
-
 # Conta il numero di città visitate
 def calcola_citta_visitate(percorso,dizionario_citta):
     citta= list(dizionario_citta.keys())
@@ -42,8 +41,11 @@ def find_next_node(percorso,current_node,dizionario_citta,dizionario_stazioni):
     elif 'S' in str(current_node):
         # In questo caso il nodo corrente è una stazione
         current_station= current_node.replace('S','')
-
-        current_coordinate= dizionario_stazioni.get(int(current_station))
+        try:
+            current_coordinate= dizionario_stazioni.get(int(current_station))
+        except:
+            print("current_station: " + str(current_station))
+            exit()
     else:
         cliente= dizionario_citta.get(current_node) 
         current_coordinate= cliente.coordinate
@@ -65,10 +67,8 @@ def find_next_node(percorso,current_node,dizionario_citta,dizionario_stazioni):
                 
     return next_node, min_dist
 
-
-
 def calcolo_ricarica(k, node_station, percorso, dizionario_citta, dizionario_stazioni, N_CITIES):
-    print("-----------Dentro calcolo ricarica-----------")
+    # print("-----------Dentro calcolo ricarica-----------")
     n_citta_visitate= calcola_citta_visitate(percorso, dizionario_citta)
 
     autonomia= k
@@ -95,16 +95,16 @@ def calcolo_ricarica(k, node_station, percorso, dizionario_citta, dizionario_sta
 
         # print("distanza_stazione_next_client: " + str(next_client.distanza_stazione))
         if future_autonomy - next_client.distanza_stazione < 0:
-            print("future_autonomy: " + str(future_autonomy))
-            print("next_client.distanza_stazione: " + str(next_client.distanza_stazione))
-            print("future_autonomy - next_client.distanza_stazione: " + str(future_autonomy - next_client.distanza_stazione))
+            #print("future_autonomy: " + str(future_autonomy))
+            #print("next_client.distanza_stazione: " + str(next_client.distanza_stazione))
+            #print("future_autonomy - next_client.distanza_stazione: " + str(future_autonomy - next_client.distanza_stazione))
             node_station= str(current_client.get_quadrant()) + 'S'
-            print("current_client:" + str(current_client.numero))
+            #print("current_client:" + str(current_client.numero))
             percorso.append(node_station) 
 
             # Calcolo quanta autonomia mi rimane quando arrivo alla prossima stazione, questa autonomia rimanente va scalata dalla ricarica precedente, in modo da evitare sprechi 
             distanza_stazione= current_client.distanza_stazione
-            print("distanza_stazione_corrente: " + str(distanza_stazione))
+            #print("distanza_stazione_corrente: " + str(distanza_stazione))
             autonomia_residua= autonomia - distanza_stazione
             break
         else:
@@ -140,7 +140,6 @@ def calcolo_ricarica(k, node_station, percorso, dizionario_citta, dizionario_sta
     else:
         return autonomia_residua
     
-
 # Tempo di ricarica è dato da 0.25 unita di tempo per unita metrica di autonomia ricaricata
 def NearestNeighbour(dizionario_citta, dizionario_stazioni, k, N_CITIES, Max_Axis):
     tempo_ricarica= 0  #Tempo speso a ricaricare
@@ -290,8 +289,6 @@ def NearestNeighbour(dizionario_citta, dizionario_stazioni, k, N_CITIES, Max_Axi
 
     tempo_totale= distanza_percorsa + tempo_ricarica
 
-    tempo_totale= round(tempo_totale,2)
-    distanza_percorsa= round(distanza_percorsa,2)
 
     print("Autonomia fine percorso: " + str(autonomia))   
     plt.draw_map(percorso, dizionario_citta, dizionario_stazioni, Max_Axis, False)
@@ -305,7 +302,6 @@ def NearestNeighbour(dizionario_citta, dizionario_stazioni, k, N_CITIES, Max_Axi
 
 
     return dizionario_Nearest_Neighbour
-
 
 # Tempo di ricarica è dato da 0.25 unita di tempo per unita metrica di autonomia ricaricata
 def NearestNeighbour_ottimizzazione_ricarica(dizionario_citta, dizionario_stazioni, k, N_CITIES, Max_Axis):
@@ -358,22 +354,22 @@ def NearestNeighbour_ottimizzazione_ricarica(dizionario_citta, dizionario_stazio
 
             percorso.append(node_station)
             # delta_autonomia mi indica quanto devo ricaricare 
-            print("percorso : " + str(percorso))
-            print("Autonomia: " + str(autonomia))
+            # print("percorso : " + str(percorso))
+            # print("Autonomia: " + str(autonomia))
 
             # OTTIMIZZAZIONE DELLA RICARICA
             percorso_futuro= percorso.copy()
 
             autonomia_residua= calcolo_ricarica(k, node_station, percorso_futuro, dizionario_citta, dizionario_stazioni, N_CITIES)
 
-            print("Autonomia Residua: " + str(autonomia_residua))
+            # print("Autonomia Residua: " + str(autonomia_residua))
 
             autonomia= k - autonomia_residua
 
             tempo_ricarica += 0.25*autonomia
             
             current_node= node_station
-            print("---------Fine ricarica------------")
+            # print("---------Fine ricarica------------")
 
         else:
             # Sono nel caso in cui lo spostamento al prossimo nodo mi permette di muovermi nella stazione di ricarica
@@ -477,34 +473,6 @@ def calcola_dizionario_distanze(dizionario_citta):
 
     dizionario_distanze_citta[0]= lista_distanze_deposito
 
-    """
-        for n in citta:
-            lista_distanze= []
-            current_node= dizionario_citta.get(int(n))
-            current_coordinate= current_node.coordinate
-            
-            distanza_deposito= current_node.distanza_deposito
-            distanza_deposito= round(distanza_deposito,2)
-
-            lista_distanze.append(distanza_deposito)
-            lista_distanze_deposito.append(distanza_deposito)
-
-            for i in citta:
-                if i != n:
-                    next_node= dizionario_citta.get(int(i))
-                    next_coordinate= next_node.coordinate
-                    distance= euclidean_distance(current_coordinate,next_coordinate)
-                    distance= round(distance,2)
-                    lista_distanze.append(distance)
-                else: 
-                    distance= 0
-                    lista_distanze.append(distance)
-
-            dizionario_distanze_citta[n]= lista_distanze
-
-        dizionario_distanze_citta[0]= lista_distanze_deposito
-    """
-
     for n in citta:
         lista_distanze= []
         current_node= dizionario_citta.get(int(n))
@@ -531,6 +499,42 @@ def calcola_dizionario_distanze(dizionario_citta):
 
     return dizionario_distanze_citta
 
+def create_distance_dict(dizionario_citta):
+    G= {}
+
+    citta= list(dizionario_citta.keys())
+    
+    collegamenti={}
+    for citt in citta:
+        coord1= dizionario_citta.get(citt)
+        coordinate1= coord1.coordinate
+
+        collegamenti[citt]= euclidean_distance([0,0],coordinate1)
+    
+    G[0]= collegamenti
+
+    for citt in citta:
+        collegamenti={}
+        if 0 not in citta:
+            citta.insert(0,0)
+        
+        for citt2 in citta:
+            if citt2 != citt:
+                if citt2 == 0:
+                    coordinate2= [0,0]
+                else:
+                    coord2= dizionario_citta.get(citt2)
+                    coordinate2= coord2.coordinate
+
+                coord1= dizionario_citta.get(citt)
+                coordinate1= coord1.coordinate
+
+
+                collegamenti[citt2]= euclidean_distance(coordinate1, coordinate2)
+        
+        G[citt]= collegamenti
+    
+    return G
 
 # L'ammissibilità dell' arco trovato qui viene determinata da MinimumSpanningTree
 def ricerca_arco_minimo_mst(dizionario_distanze_citta, dizionario_uso_archi):
@@ -708,7 +712,6 @@ def find_greater_2_degree_verteces(dict_multi_graph_s, dizionario_citta):
 
     return vertex_greater_2_degree
 
-
 def MinimumSpanningTree(dizionario_citta):
     # Distanza coperta dal'mst
     distanza_mst= 0
@@ -783,37 +786,6 @@ def MinimumSpanningTree(dizionario_citta):
 
     # return dizionario_distanze_citta, dizionario_uso_archi, distanza_mst, archi_usati
     return archi_usati
-
-def create_induced_subgraph(dizionario_citta, odd_degree_verteces):
-    # Devo creare un grafo dove ogni nodo di grado dispari è collegato ad ogni altro nodo di grado dispari
-    subgraph= {}
-
-    # Devo creare gli archi che connettono ogni nodo con tutti gli altri
-    for vertice in odd_degree_verteces:
-        # Al posto di ricreare il dizionario delle distanze potrei sfruttare quello che ho già creato in precedenza per creare l'mst
-        dizionario_distanze= {}
-
-        if vertice != 0:
-            element_vertice= dizionario_citta.get(int(vertice))
-            coordinate_vertice= element_vertice.coordinate
-        else:
-            coordinate_vertice= [0,0]
-
-        # Per ogni altro nodo di grado dispari
-        for nodo in odd_degree_verteces:
-            if nodo != vertice:
-                if nodo != 0:
-                    element_nodo= dizionario_citta.get(int(nodo))
-                    coordinate_nodo= element_nodo.coordinate
-                else:
-                    coordinate_nodo= [0,0]
-
-                distanza_arco= euclidean_distance(coordinate_vertice,coordinate_nodo)
-                dizionario_distanze[nodo]= distanza_arco
-
-        subgraph[vertice]= dizionario_distanze
-    
-    return subgraph
 
 def find_perfect_matching(subgraph):
     # Un perfect matching graph è un insieme di archi indipendenti( ovvero che questi archi  non devono condividere vertici in comune ) che vanno a considerare tutti i vertici
@@ -1032,7 +1004,6 @@ def check_connection_multigraph(u,w,v,archi_v,dict_multi_graph_s):
         # print("True")
         return True
 
-
 # def create_christofides_graph(perfect_matching_graph, mst_graph, dizionario_citta, Max_Axis):
 def create_christofides_graph(mst_graph, G, dizionario_citta, Max_Axis):    
 
@@ -1246,8 +1217,8 @@ def create_green_graph(christofides_graph_no_recharge, dizionario_stazioni, dizi
             if node != previous_node:
                 next_node= node
 
-        print("current_node: " + str(current_node))
-        print("dict_current_node: " +  str(dict_current_node))
+        # print("current_node: " + str(current_node))
+        # print("dict_current_node: " +  str(dict_current_node))
 
 
         #     distanza_next_node= dict_current_node.get(int(next_node))
@@ -1331,43 +1302,6 @@ def minimum_weight_matching(MST, G, odd_vert):  # MST è una lista di triple, (v
         MST.append([v, closest, length])
         odd_vert.remove(closest)
 
-def create_distance_dict(dizionario_citta):
-    G= {}
-
-    citta= list(dizionario_citta.keys())
-    
-    collegamenti={}
-    for citt in citta:
-        coord1= dizionario_citta.get(citt)
-        coordinate1= coord1.coordinate
-
-        collegamenti[citt]= euclidean_distance([0,0],coordinate1)
-    
-    G[0]= collegamenti
-
-    for citt in citta:
-        collegamenti={}
-        if 0 not in citta:
-            citta.insert(0,0)
-        
-        for citt2 in citta:
-            if citt2 != citt:
-                if citt2 == 0:
-                    coordinate2= [0,0]
-                else:
-                    coord2= dizionario_citta.get(citt2)
-                    coordinate2= coord2.coordinate
-
-                coord1= dizionario_citta.get(citt)
-                coordinate1= coord1.coordinate
-
-
-                collegamenti[citt2]= euclidean_distance(coordinate1, coordinate2)
-        
-        G[citt]= collegamenti
-    
-    return G
-
 def Christofides_Algorithm(dizionario_citta, dizionario_stazioni, Max_Axis, k):
     G= create_distance_dict(dizionario_citta)
     # print("G: " + str(G))
@@ -1400,7 +1334,7 @@ def Christofides_Algorithm(dizionario_citta, dizionario_stazioni, Max_Axis, k):
 
     christofides_graph_no_recharge= create_christofides_graph(mst_graph,G,dizionario_citta, Max_Axis)
 
-    print("christofide_graph_no_recharge: " + str(christofides_graph_no_recharge))
+    # print("christofide_graph_no_recharge: " + str(christofides_graph_no_recharge))
     
     plt.draw_Christofides(christofides_graph_no_recharge, dizionario_citta, Max_Axis)
 
@@ -1408,7 +1342,6 @@ def Christofides_Algorithm(dizionario_citta, dizionario_stazioni, Max_Axis, k):
 
     christofides_graph, distanza_percorsa, tempo_ricarica, percorso, tempo_totale= create_green_graph(christofides_graph_no_recharge, dizionario_stazioni, dizionario_citta, k)
     plt.draw_Christofides_green(christofides_graph, dizionario_citta, dizionario_stazioni, Max_Axis)
-
 
     # print("christofide_graph: " + str(christofides_graph))
 
