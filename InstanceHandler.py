@@ -178,7 +178,70 @@ def leggi_istanza():
 
 
 def salva_risultati(directory, dizionarioRisultati, dizionario_citta, dizionario_stazioni, G, Max_Axis, k):
-    print("dentro salva_risultati")
+
+    # In dizionario_SA_C (e reciproco NN) ho come chiavi il numero di esecuzione e come valore il dizionario rispettivo della soluzione di quell'esecuzione
+    #
+    # ----------------------- Salvataggio Risultati Algoritmi------------------------------------
+    #
+    # Prima di fare il salvataggio devo impacchettare tutti i dati nei relativi dizionari
+    #
+    # Legenda:
+    #
+    #   -  indica la chiave
+    #   --> indica il dizionario risultante dall'uso di quella chiave
+    #
+    #
+    # ---------------------------------------------------------------------------------------------
+    # Come è costituito l'albero del dizionario: dizionario_soluzioni:
+    #
+    # dizionario_soluzioni: -Costruttive --> dizionario_Costruttive: -NN --> dizionario_Nearest_Neighbour(chiavi elencate sotto)
+    #                                                                -C --> dizionario_Christofides (chiavi elencate sotto)              
+    #                        
+    #                       -Meta Euristiche --> dizionario_MetaEuristiche: -SA --> dizionario_SA:   -NN -->   dizionario_SA_NN  -Esecuzione --> [dizionario_SA_NN_Esecuzione (chiavi elencate sotto), dizionario_Evoluzione_Soluzioni_NN]
+    #                                                                                                -C  -->   dizionario_SA_C   -Esecuzione --> [dizionario_SA_C_Esecuzione  (chiavi elencate sotto), dizionario_Evoluzione_Soluzioni_C]
+    #
+    #                                                                       -ILS --> dizionario_ILS: {}(Per ora vuoto)
+    #
+    #                                       
+    # Sia in Costruttive che in SA , NN e C sono composti dalle seguenti chiavi:
+    #                       - Percorso
+    #                       - Distanza Totale
+    #                       - Tempo Totale (di percorrenza)
+    #                       - Tempo Ricarica
+    #                       - Tempo Esecuzione (relativo a quella singola esecuzione)
+    #
+    # Sia dizionario_Evoluzione_Soluzioni_C che dizionario_Evoluzione_Soluzioni_NN sono relativi ad una esecuzione, al loro interno avremo le seguenti chiavi:
+    #
+    #   - Soluzione corrente (precedente)
+    #   - Costo soluzione corrente
+    #   - Soluzione migliore (che è quella che viene trovata nell'iterazione corrente nella corrente temperatura)
+    #   - Costo soluzione precedente
+    #   - Temperatura
+    #   - Iterazione
+    #
+    # ---------------------------------------------------------------------------------------------
+    #   
+    # dizionario_dati: -Dati --> dizionario_istanza:   - lunghezza assi
+    #                                                  - Stazioni ricarica
+    #                                                  - clienti
+    #                                                  - Dizionario distanze
+    #                   
+    #                  - SA --> dizionario_param_SA:   -Parametri --> dizionario_parametri: - NCitta
+    #                                                                                       - Iterazioni
+    #                                                                                       - Temperatura
+    #                                                                                       - Tfrozen
+    #                                                                                       - Fattore Decrescita
+    #                  - ILS --> dizionario_param_ILS: {} ( per ora ancora vuoto )
+    #
+    #
+    #
+    #
+
+    # --------------------------------------------------------- Recupero dati ----------------------------------------------------------------
+
+    # ----------------------------------------------------------------------------------------------------------------------------------------
+
+
     APP_FOLDER= 'C:/Users/lucap/OneDrive/Desktop/GreenTSP/'
     APP_FOLDER= APP_FOLDER + directory + '/'
     
@@ -219,6 +282,7 @@ def salva_risultati(directory, dizionarioRisultati, dizionario_citta, dizionario
 
 
     # Salvo i dati dell'istanza, quindi coordinate città e stazioni
+    #------------------------------------------ DATI ISTANZA.TXT ---------------------------------------------------------
     name_file= path_dir + "/dati_istanza_" + str(name_dir[-1:]) + ".txt" 
     
     cities= list(dizionario_citta.keys())
@@ -248,7 +312,7 @@ def salva_risultati(directory, dizionarioRisultati, dizionario_citta, dizionario
     f.close()
 
     # Salvo i risultati di Euristiche Costruttive e Meta Euristiche (nello stesso file)
-
+    #------------------------------------------ RISULTATI_ALGORITMI.TXT ---------------------------------------------------------
     name_file= path_dir + "/risultati_algoritmi.txt"
     f= open(name_file, "w+")
 
@@ -260,8 +324,8 @@ def salva_risultati(directory, dizionarioRisultati, dizionario_citta, dizionario
     dizionarioSA_NN= dizionarioSA['NN']
     dizionarioSA_C= dizionarioSA['C']
 
-    dizionario_sol_migliore_NN= dizionarioRisultati['sol_migl_NN']
-    dizionario_sol_migliore_C= dizionarioRisultati['sol_migl_C']
+    dizionario_migliore_NN= dizionarioRisultati['sol_migl_NN']
+    dizionario_migliore_C= dizionarioRisultati['sol_migl_C']
 
 
     f.write("------ Algoritmo Costruttivo Greedy Nearest_Neighbour ------")
@@ -282,8 +346,9 @@ def salva_risultati(directory, dizionarioRisultati, dizionario_citta, dizionario
     else:
         f.write("\nNCitta: " + str(len(cities)))
         f.write("\tIterazioni: " + str(dizionarioSA['n_iterazioni']))
-        f.write("\tTemperatura: " + str(dizionarioSA['Temperatura']))
+        f.write("\tTemperatura: " + str(dizionarioSA['Temperature']))
         f.write("\tTFrozen: " + str(dizionarioSA['Tfrozen']))
+        f.write("\tFattore Decrescita: " +str(dizionarioSA['decreaseT']))
 
     if len(dizionarioSA_NN) != 0:
         n_esecuzioni= list(dizionarioSA_NN.keys())
@@ -302,16 +367,20 @@ def salva_risultati(directory, dizionarioRisultati, dizionario_citta, dizionario
         f.write("\n\nTempo Esecuzione Totale: " + str(dizionarioSA_NN['tempo_esec']))
 
         f.write("\n Soluzioni Migliori: ")
-        chiavi= list(dizionario_sol_migliore_NN.keys())
-        i = 0
-        for chiave in chiavi:
-            f.write("\nEsecuzione")
-            f.write("\n" + str(i) + ") ")
-            f.write("\n Soluzione precedente: " + str(chiave))
-            f.write("\n Soluzione migliore: " + str(dizionario_sol_migliore_NN[chiave][0]))
-            f.write("\n Temperatura: " + str(dizionario_sol_migliore_NN[chiave][1]))
-            f.write("\n Iterazione: " + str(dizionario_sol_migliore_NN[chiave][2]))
-            i += 1
+
+        esecuzione= list(dizionario_migliore_NN.keys())
+        for esec in esecuzione:
+            f.write("\nEsecuzione: " + str(esec) + "\n")
+            dizionario_sol_migliore_NN= dizionario_migliore_NN[esec]
+            chiavi= list(dizionario_sol_migliore_NN.keys())
+            for chiave in chiavi:
+                f.write("\n" + str(chiave) + ") ")
+                f.write("\n Soluzione precedente: " + str(dizionario_sol_migliore_NN[chiave][4]))
+                f.write("\n Soluzione migliore: " + str(dizionario_sol_migliore_NN[chiave][0]))
+                f.write("\n Costo Soluzione: " + str(dizionario_sol_migliore_NN[chiave][3]))
+                f.write("\n Temperatura: " + str(dizionario_sol_migliore_NN[chiave][1]))
+                f.write("\n Iterazione: " + str(dizionario_sol_migliore_NN[chiave][2]))
+                f.write("\n archi_scelti: " + str(dizionario_sol_migliore_NN[chiave][5]))
 
     if len(dizionarioSA_C) != 0:
         n_esecuzioni= list(dizionarioSA_C.keys())
@@ -330,16 +399,19 @@ def salva_risultati(directory, dizionarioRisultati, dizionario_citta, dizionario
         f.write("\n\nTempo Esecuzione Totale: " + str(dizionarioSA_C['tempo_esec']))
 
         f.write("\n Soluzioni Migliori: ")
-        chiavi= list(dizionario_sol_migliore_C.keys())
-        i= 0
-        for chiave in chiavi:
-            f.write("\n" + str(i) + ") ")
-            f.write("\n Soluzione precedente: " + str(chiave))
-            f.write("\n Soluzione migliore: " + str(dizionario_sol_migliore_C[chiave][0]))
-            f.write("\n Temperatura: " + str(dizionario_sol_migliore_C[chiave][1]))
-            f.write("\n Iterazione: " + str(dizionario_sol_migliore_C[chiave][2]))
-            i += 1
-
-
-
+        esecuzione= list(dizionario_migliore_C.keys())
+        for esec in esecuzione:
+            f.write("----------------------------------------------------------------------------")
+            f.write("\n\nEsecuzione: " + str(esec) + "\n")
+            dizionario_sol_migliore_C= dizionario_migliore_C[esec]
+            chiavi= list(dizionario_sol_migliore_C.keys())
+            for chiave in chiavi:
+                f.write("\n" + str(chiave) + ") ")
+                f.write("\n Soluzione precedente: " + str(dizionario_sol_migliore_C[chiave][4]))
+                f.write("\n Soluzione migliore: " + str(dizionario_sol_migliore_C[chiave][0]))
+                f.write("\n Costo Soluzione: " + str(dizionario_sol_migliore_C[chiave][3]))
+                f.write("\n Temperatura: " + str(dizionario_sol_migliore_C[chiave][1]))
+                f.write("\n Iterazione: " + str(dizionario_sol_migliore_C[chiave][2]))
+                f.write("\n archi_scelti: " + str(dizionario_sol_migliore_C[chiave][5]))
+            f.write("\n----------------------------------------------------------------------------")
     f.close()

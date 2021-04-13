@@ -47,3 +47,8 @@ class Cliente:
             return 3
         elif self.coordinate[0] <= 0 and self.coordinate[1] > 0:
             return 4
+
+
+if __name__ == "__main__":
+    A= euclidean_distance([0, -9],[3, -16])
+    print(A)

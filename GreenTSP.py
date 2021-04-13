@@ -68,7 +68,7 @@ if __name__ == "__main__":
             print("... Fine Esecuzione Christofides...")
             print("Fine eseguzione algoritmi...")
 
-            print("------------------------------------ Menu Stampe ------------------------------------ ") 
+            print("------------------------------------ Menu Stampe ----------------------------------------------- ") 
             scelta_stampe= 1
             while scelta_stampe != 0:
                 print("\n1- Stampa Christofides")
@@ -98,199 +98,317 @@ if __name__ == "__main__":
 
 
             print("------------------------------------ Esecuzione Meta-Euristiche ------------------------------------")
-            print("----------- Simulated Annealing -----------")
-            numero_iterazioni= math.factorial(N_CITIES-1)//500
-            Temperature=  N_CITIES*100
-            Tfrozen= 10
-            n_esecuzioni= 5
-            print("Parametri di Default:")
-            print("Temperature: " + str(Temperature))
-            print("Tfrozen: " + str(Tfrozen))
-            print("Numero Iterazioni: " + str(numero_iterazioni))
-            print("Numero di esecuzioni dell'algoritmo: " + str(n_esecuzioni))
-            scelta_param= input("Inserire y/n per usare parametri di default: ")
-            if scelta_param == 'n':
-                numero_iterazioni= int(input("\nInserire il numero di iterazioni da effettuare: "))
-                Temperature= int(input("\nInserire la temperatura iniziale desiderata: "))
-                Tfrozen= int(input("\nInserire il valore di TFrozen: "))
-                n_esecuzioni= int(input("\nInserire il numero di volte che si vuole eseguire l'algoritmo: "))
-            
-            scelta_meta_euristica= -1
-            while scelta_meta_euristica != 0:
+            print("------------------------------------ Simulated Annealing ------------------------------------")
+
+            processazione_soluzione= 1
+            # processazione_soluzione permette di svolgere il SA in differenti modi sulla stessa soluzione
+            while processazione_soluzione != 0: 
+                print("Scegliere il tipo di esecuzione del SA: ")
+                print("\n1) Manuale")
+                print("\n2)Da File Config (Testing)")
+                scelta_esecuzione= int(input("Scelta"))
+
+                while scelta_esecuzione != 1 and scelta_esecuzione!= 2:
+                    print("scelta non valida, riprovare...")
+                    print("\nScegliere il tipo di esecuzione del SA: ")
+                    print("\n1) Automatica (Testing, lettura dei parametri da file di config)")
+                    print("\n2) Manuale")
+                    scelta_esecuzione= int(input("Scelta"))
+
+                if scelta_esecuzione == 1: # Esecuzione Automatica
+                    config_file= open("config_file.txt", 'r')
+                    # Temperature, decreaseT, Tfrozen, numero_iterazioni, n_esecuzioni
+                    i= 0
+                    n_esecuzione= 0
+                    dizionario_config={}
+                    dizionario={}
+                    for line in config_file:
+                        print("line: " + str(line))
+                        if line != '\n' and '%' not in line:
+                            i += 1
+                            if i == 1:
+                                n_esecuzione += 1
+                                scelta_soluzione= int(line)
+                            elif i == 2:
+                                numero_iterazioni= int(line)
+                                dizionario['numero_iterazioni']= numero_iterazioni
+                            elif i == 3:
+                                Temperature= int(line)
+                                dizionario['Temperature']= Temperature
+                            elif i == 4:
+                                Tfrozen= int(line)
+                                dizionario['Tfrozen']= Tfrozen
+                            elif i == 5:
+                                n_esecuzioni= int(line)
+                                dizionario['n_esecuzioni']= n_esecuzioni
+                            elif i == 6:
+                                
+                                decreaseT= float(line)
+                                dizionario['decreaseT']= decreaseT
+                                dizionario_config[n_esecuzione]= dizionario
+                                dizionario={} 
+                                i= 0
+                        config_file.close()
+
+                elif scelta_esecuzione == 2:  # Esecuzione Manuale
+                    
+                    # Impostazione parametri di Default
+                    numero_iterazioni= math.factorial(N_CITIES-1)//500
+                    Temperature=  N_CITIES*100
+                    decreaseT= 0,90
+                    Tfrozen= 10
+                    n_esecuzioni= 5
+                    
+                    print("\n----------------------Parametri di Default:----------------------")
+                    print("Temperature: " + str(Temperature))
+                    print("Fattore di decrescita: " + str(decreaseT))
+                    print("Tfrozen: " + str(Tfrozen))
+                    print("Numero Iterazioni: " + str(numero_iterazioni))
+                    print("Numero di esecuzioni dell'algoritmo: " + str(n_esecuzioni))
+                    print("\n-----------------------------------------------------------------")
+
+                    print("\n\nScelta letture parametri:")
+                    print("\n1) Uso dei parametri di default")
+                    print("\n2) Inserimento manuale parametri")
+                    scelta_param= int(input("Scelta: "))
+                    while scelta_param != 1 and scelta_param != 2:
+                        print("\n\nscelta non valida, riprovare..")
+                        print("\n\nMenu selezione metodologia scelta parametri:")
+                        print("\n1) Uso dei parametri di default")
+                        print("\n2) Inserimento manuale parametri")
+                        scelta_param= int(input("Scelta: "))
+
+                    if scelta_param == 2:
+                        numero_iterazioni= int(input("\nInserire il numero di iterazioni da effettuare: "))
+                        Temperature= int(input("\nInserire la temperatura iniziale desiderata: "))
+                        Tfrozen= int(input("\nInserire il valore di TFrozen: "))
+                        n_esecuzioni= int(input("\nInserire il numero di volte che si vuole eseguire l'algoritmo: "))
+                        decreaseT= float(input("\nInserire il fattore di diminuzione della temperatura (valore compreso tra 0 e 1): "))
+
+
+                    print("\nScegliere quale soluzione processare tramite Simulated Annealing: ")
+                    print("-1 Nearest Neighbour Solution")
+                    print("-2 Christofides Solution")
+                    print("-3 Entrambe le soluzioni")
+                    print("-0 Exit")
+                    scelta_soluzione= int(input("Scelta: "))
+
+                    while scelta_soluzione not in range(0,4):
+                        print("\nscelta non valida, riprovare...")
+                        print("\nScegliere quale soluzione processare tramite Simulated Annealing: ")
+                        print("-1 Nearest Neighbour Solution")
+                        print("-2 Christofides Solution")
+                        print("-3 Entrambe le soluzioni")
+                        print("-0 Exit")
+                        scelta_soluzione= int(input("Scelta: "))
+
+                
+                
+                # Inizializzo dizionari dei risultati del SA
                 dizionario_SA_NN= {}
                 dizionario_SA_C= {}
-                
-                print("\nScegliere quale soluzione processare tramite Simulated Annealing: ")
-                print("-1 Nearest Neighbour Solution")
-                print("-2 Christofides Solution")
-                print("-3 Entrambe le soluzioni")
-                print("-0 Exit")
-                scelta_meta_euristica= int(input("Scelta: "))
 
-                if scelta_meta_euristica == 1:    # SA con Nearest Neighbour
+                if scelta_soluzione == 1:
                     print("\nSimulated Annealing con soluzione Nearest Neighbour")
+                    esecuzione= 0
                     start_SA_NN= time.time()
-                    dizionario_SA_NN, dizionario_sol_migliore_NN= simulated_annealing(dizionario_Nearest_Neighbour, dizionario_citta, dizionario_stazioni, G, k, Temperature, Tfrozen, numero_iterazioni, n_esecuzioni)
+
+                    while esecuzione < n_esecuzioni:   
+                        
+                        dizionario_SA_NN_Esecuzione, dizionario_Evoluzione_Soluzioni_NN= simulated_annealing(dizionario_Nearest_Neighbour, dizionario_citta, dizionario_stazioni, G, k, Temperature, decreaseT, Tfrozen, numero_iterazioni, n_esecuzioni)
+
+                        dizionario_SA_NN[esecuzione]= [dizionario_SA_NN_Esecuzione,dizionario_Evoluzione_Soluzioni_NN]
+
+                        esecuzione += 1
+
                     end_SA_NN= time.time()
-                    
-                    dizionario_SA_NN['tempo_esec']= str(end_SA_NN - start_SA_NN)
-                    # Stampa risultati
-                    print("----------- Risultati Simulated Annealing -----------")
-                    print("--- Matrice Distanza ---")
-                    print(str(G))
-                    print("--- Dizionario Stazioni ---")
-                    print(str(dizionario_stazioni))
-                    citta= list(dizionario_citta.keys())
-                    for citt in citta:
-                        coord= dizionario_citta.get(citt)
-                        coordinate= coord.coordinate
-                        print(str(citt) + ': ' + str(coordinate))
-
-                    print("- Con Nearest Neighbour")
-                    N_esecuzioni= list(dizionario_SA_NN.keys())
-                    for esec in N_esecuzioni:
-                        if esec  != 'tempo_esec':
-                            dizionario_NN= dizionario_SA_NN[int(esec)]
-                            print("Tour: " + str(dizionario_NN['soluzione_migliore']))
-                            print("Distanza percorsa: " + str(dizionario_NN['distanza_percorsa_migliore']))
-                            print("Durata Tour: " + str(dizionario_NN['costo_sol_migliore']))
-                            print("Tempo esecuzione:  " + str(dizionario_NN['tempo_esecuzione']))
-                    
-                    print("\nTempo esecuzione totale: " + str(dizionario_SA_NN['tempo_esec']))
-
-                elif scelta_meta_euristica == 2:   # SA con Christofides
+                    dizionario_SA_NN['Tempo Esecuzione Totale']= str(end_SA_NN - start_SA_NN)
+                        
+                elif scelta_soluzione == 2:
                     print("\nSimulated Annealing con soluzione Christofides")
-
+                    esecuzione= 0
                     start_SA_C= time.time()
-                    dizionario_SA_C, dizionario_sol_migliore_C= simulated_annealing(dizionario_Christofides, dizionario_citta, dizionario_stazioni, G, k, Temperature, Tfrozen, numero_iterazioni, n_esecuzioni)
-                    start_SA_NN= time.time()
-                    end_SA_C= time.time()
                     
-                    dizionario_SA_C['tempo_esec']= str(end_SA_C - start_SA_C)
+                    while esecuzione < n_esecuzioni:
 
-                    # Stampa risultati
-                    print("----------- Risultati Simulated Annealing -----------")
-                    print("--- Matrice Distanza ---")
-                    print(str(G))
-                    print("--- Dizionario Stazioni ---")
-                    print(str(dizionario_stazioni))
-                    print("--- Coordinate Citta ---")
 
-                    citta= list(dizionario_citta.keys())
-                    for citt in citta:
-                        coord= dizionario_citta.get(citt)
-                        coordinate= coord.coordinate
-                        print(str(citt) + ': ' + str(coordinate))
+                        dizionario_SA_C_Esecuzione, dizionario_Evoluzione_Soluzioni_C= simulated_annealing(dizionario_Christofides, dizionario_citta, dizionario_stazioni, G, k, Temperature, decreaseT, Tfrozen, numero_iterazioni, n_esecuzioni)
+                        
+                        dizionario_SA_C[esecuzione]= [dizionario_SA_C_Esecuzione,dizionario_Evoluzione_Soluzioni_C]
 
-                    print("- Con Christofides")
-                    N_esecuzioni= list(dizionario_SA_C.keys())
-                    for esec in N_esecuzioni:
-                        if esec  != 'tempo_esec':
-                            dizionario_C= dizionario_SA_C[int(esec)]
-                            print("Tour: " + str(dizionario_C['soluzione_migliore']))
-                            print("Distanza percorsa: " + str(dizionario_C['distanza_percorsa_migliore']))
-                            print("Durata Tour: " + str(dizionario_C['costo_sol_migliore']))
-                            print("Tempo esecuzione:  " + str(dizionario_C['tempo_esecuzione']))
-                    print("\nTempo esecuzione totale: " + str(dizionario_SA_C['tempo_esec']))
+                        esecuzione += 1
+                    
+                    end_SA_C= time.time()
+                    dizionario_SA_C['Tempo Esecuzione Totale']= str(end_SA_C - start_SA_C)                
 
-                elif scelta_meta_euristica == 3:
-
+                elif scelta_soluzione == 3:
                     print("\nSimulated Annealing con soluzione Nearest Neighbour")
+                    esecuzione= 0
                     start_SA_NN= time.time()
-                    dizionario_SA_NN, dizionario_sol_migliore_NN= simulated_annealing(dizionario_Nearest_Neighbour, dizionario_citta, dizionario_stazioni, G, k, Temperature, Tfrozen, numero_iterazioni, n_esecuzioni)
+
+                    while esecuzione < n_esecuzioni:
+                      
+                        dizionario_SA_NN_Esecuzione, dizionario_Evoluzione_Soluzioni_NN= simulated_annealing(dizionario_Nearest_Neighbour, dizionario_citta, dizionario_stazioni, G, k, Temperature, decreaseT, Tfrozen, numero_iterazioni, n_esecuzioni)
+                                  
+                        dizionario_SA_NN[esecuzione]= [dizionario_SA_NN_Esecuzione,dizionario_Evoluzione_Soluzioni_NN]
+                        
+                        esecuzione += 1
+
                     end_SA_NN= time.time()
+                    dizionario_SA_NN['Tempo Esecuzione Totale']= str(end_SA_NN - start_SA_NN) 
 
                     print("\nSimulated Annealing con soluzione Christofides")
+                    esecuzione= 0
                     start_SA_C= time.time()
-                    dizionario_SA_C, dizionario_sol_migliore_C= simulated_annealing(dizionario_Christofides, dizionario_citta, dizionario_stazioni, G, k, Temperature, Tfrozen, numero_iterazioni, n_esecuzioni)
-                    end_SA_C= time.time()
 
-                    dizionario_SA_NN['tempo_esec']= str(end_SA_NN - start_SA_NN)
-                    dizionario_SA_C['tempo_esec']= str(end_SA_C - start_SA_C)
+                    while esecuzione < n_esecuzioni:
 
+                        dizionario_SA_C_Esecuzione, dizionario_Evoluzione_Soluzioni_C= simulated_annealing(dizionario_Christofides, dizionario_citta, dizionario_stazioni, G, k, Temperature, decreaseT, Tfrozen, numero_iterazioni, n_esecuzioni)
 
-                    # Stampa risultati
-                    print("----------- Risultati Simulated Annealing -----------")
-                    print("--- Matrice Distanza ---")
-                    print(str(G))
-                    print("--- Dizionario Stazioni ---")
-                    print(str(dizionario_stazioni))
-                    print("--- Coordinate Citta ---")
+                        dizionario_SA_C[esecuzione]= [dizionario_SA_C_Esecuzione,dizionario_Evoluzione_Soluzioni_C]
 
-                    citta= list(dizionario_citta.keys())
-                    for citt in citta:
-                        coord= dizionario_citta.get(citt)
-                        coordinate= coord.coordinate
-                        print(str(citt) + ': ' + str(coordinate))
-
-                    print("- Con Nearest Neighbour")
-                    N_esecuzioni= list(dizionario_SA_NN.keys())
-                    for esec in N_esecuzioni:
-                        if esec  != 'tempo_esec':
-                            dizionario_NN= dizionario_SA_NN[int(esec)]
-                            print("Tour: " + str(dizionario_NN['soluzione_migliore']))
-                            print("Distanza percorsa: " + str(dizionario_NN['distanza_percorsa_migliore']))
-                            print("Durata Tour: " + str(dizionario_NN['costo_sol_migliore']))
-                            print("Tempo esecuzione:  " + str(dizionario_NN['tempo_esecuzione']))
-                    print("\nTempo esecuzione totale: " + str(dizionario_SA_NN['tempo_esec']))
-
-                    print("- Con Christofides")
-                    n_esecuzioni= list(dizionario_SA_C.keys())
-                    for esec in n_esecuzioni:
-                        if esec  != 'tempo_esec':
-                            dizionario_C= dizionario_SA_C[int(esec)]
-                            print("Tour: " + str(dizionario_NN['soluzione_migliore']))
-                            print("Distanza percorsa: " + str(dizionario_C['distanza_percorsa_migliore']))
-                            print("Durata Tour: " + str(dizionario_C['costo_sol_migliore']))
-                            print("Tempo esecuzione:  " + str(dizionario_C['tempo_esecuzione']))
-                    print("\nTempo esecuzione totale: " + str(dizionario_SA_C['tempo_esec']))
-
-
-
+                        esecuzione += 1
+                    
+                    end_SA_C= time.time()                    
+                    dizionario_SA_C['Tempo Esecuzione Totale']= str(end_SA_C - start_SA_C)
+                    
+                    
+                # In dizionario_SA_C (e reciproco NN) ho come chiavi il numero di esecuzione e come valore il dizionario rispettivo della soluzione di quell'esecuzione
+                #
                 # ----------------------- Salvataggio Risultati Algoritmi------------------------------------
-                if scelta_meta_euristica != 0:
-                    print("\n----------- Salvataggio Risultati -----------")
-                    scelta_salvataggioSA= -1
-                    while scelta_salvataggioSA != 'y' and scelta_salvataggioSA != 'n':
-                        scelta_salvataggioSA= input("Salvare risultati? y/n\n")
-                        if scelta_salvataggioSA != 'y' and scelta_salvataggioSA != 'n':
-                            print("Inserimento errato... Inserire o 'y' o 'n'\n")
-                        else:
-                            if scelta_salvataggioSA == 'y':
+                #
+                # Prima di fare il salvataggio devo impacchettare tutti i dati nei relativi dizionari
+                #
+                # Legenda:
+                #
+                #   -  indica la chiave
+                #   --> indica il dizionario risultante dall'uso di quella chiave
+                #
+                #
+                # ---------------------------------------------------------------------------------------------
+                # Come è costituito l'albero del dizionario: dizionario_soluzioni:
+                #
+                # dizionario_soluzioni: -Costruttive --> dizionario_Costruttive: -NN --> dizionario_Nearest_Neighbour(chiavi elencate sotto)
+                #                                                                -C --> dizionario_Christofides (chiavi elencate sotto)              
+                #                        
+                #                       -Meta Euristiche --> dizionario_MetaEuristiche: -SA --> dizionario_SA:   -NN -->   dizionario_SA_NN  -Esecuzione --> [dizionario_SA_NN_Esecuzione (chiavi elencate sotto), dizionario_Evoluzione_Soluzioni_NN]
+                #                                                                                                                            -Tempo Esecuzione Totale               
+                #
+                #                                                                                                -C  -->   dizionario_SA_C   -Esecuzione --> [dizionario_SA_C_Esecuzione  (chiavi elencate sotto), dizionario_Evoluzione_Soluzioni_C]
+                #                                                                                                                            -Tempo Esecuzione Totale
+                #
+                #                                                                       -ILS --> dizionario_ILS: {}(Per ora vuoto)
+                #
+                #
+                # In Costruttive, NN e C hanno le seguenti chiavi:
+                #                       - percorso
+                #                       - distanza
+                #                       - tempo_tot
+                #                       - tempo_ricarica
+                #                       - tempo_esec
+                #
+                #                                       
+                # In SA , NN e C sono composti dalle seguenti chiavi:
+                #                       - Percorso
+                #                       - Distanza Totale
+                #                       - Tempo Totale (di percorrenza)
+                #                       - Tempo Ricarica
+                #                       - Tempo Esecuzione (relativo a quella singola esecuzione)
+                #
+                # Sia dizionario_Evoluzione_Soluzioni_C che dizionario_Evoluzione_Soluzioni_NN sono relativi ad una esecuzione, al loro interno avremo le seguenti chiavi:
+                #
+                #   - Soluzione corrente (precedente)
+                #   - Costo soluzione corrente
+                #   - Soluzione migliore (che è quella che viene trovata nell'iterazione corrente nella corrente temperatura)
+                #   - Costo soluzione precedente
+                #   - Temperatura
+                #   - Iterazione
+                #
+                # ---------------------------------------------------------------------------------------------
+                #   
+                # dizionario_dati: -Dati --> dizionario_istanza:   - Lunghezza Assi
+                #                                                  - Stazioni Ricarica --> dizionario_stazioni
+                #                                                  - Citta             --> dizionario_citta
+                #                                                  - Dizionario Distanze
+		        #						                           - Autonomia
+                #                   
+                #                  - SA --> dizionario_parametri_SA: - NCitta
+                #                                                    - Iterazioni
+                #                                                    - Temperatura
+                #                                                    - Tfrozen
+                #                                                    - Fattore Decrescita
+		        #                
+		        #                  - ILS --> dizionario_param_ILS: {} ( per ora ancora vuoto )
 
-                                dizionario_risultati= {}
-                                dizionario_SA={}
-                                dizionario_ILS={} #Iterative Local Search
-                                dizionario_Costructive= {}
+                # Incapsulamento dati
+                dizionario_soluzioni= {}
 
-                                dizionario_Costructive['NearestNeighbour']= dizionario_Nearest_Neighbour
-                                dizionario_Costructive['Christofides']= dizionario_Christofides
-                                dizionario_risultati['Costruttive']= dizionario_Costructive
+                # Dizionario Soluzioni 
+                
+                # Costruttive
+                dizionario_Costruttive= {}
+                dizionario_Costruttive['NN']= dizionario_Nearest_Neighbour
+                dizionario_Costruttive['C']= dizionario_Christofides
+                
+                dizionario_soluzioni['Costruttive']=dizionario_Costruttive
 
-                                # Caratteristiche con cui viene svolto il SA
-                                dizionario_SA['n_iterazioni']=  numero_iterazioni
-                                dizionario_SA['Temperatura']= Temperature
-                                dizionario_SA['Tfrozen']= Tfrozen
+                # Meta Euristiche
+                dizionario_MetaEuristiche={}
+                dizionario_SA= {}
+                dizionario_ILS= {}
 
-                                dizionario_SA['NN']= dizionario_SA_NN
-                                dizionario_SA['C']= dizionario_SA_C
-                                dizionario_risultati['SA']= dizionario_SA
+                # Simulated Annealing
 
-                                """dizionario_ILS['NN']= dizionario_ILS_NN
-                                dizionario_ILS['C']= dizionario_ILS_C
-                                dizionario_risultati['ILS']= dizionario_ILS"""
-                                if scelta_meta_euristica == 1:
-                                    dizionario_risultati['sol_migl_C'] = {}
-                                    dizionario_risultati['sol_migl_NN']= dizionario_sol_migliore_NN
-                                elif scelta_meta_euristica == 2:
-                                    dizionario_risultati['sol_migl_NN']= {}
-                                    dizionario_risultati['sol_migl_C']= dizionario_sol_migliore_C
-                                else:
-                                    dizionario_risultati['sol_migl_NN']= dizionario_sol_migliore_NN
-                                    dizionario_risultati['sol_migl_C']= dizionario_sol_migliore_C
-                                
-                                salva_risultati('Istanze', dizionario_risultati, dizionario_citta, dizionario_stazioni, G, Max_Axis, k)
+                dizionario_SA['NN']= dizionario_SA_NN
+                dizionario_SA['C']= dizionario_SA_C
 
+                dizionario_MetaEuristiche['SA']= dizionario_SA
+
+                # Iterative Local Search
+
+                dizionario_MetaEuristiche['ILS']= dizionario_ILS
+
+                dizionario_soluzioni['Meta Euristiche']= dizionario_MetaEuristiche
+
+                # Dizionario Dati
+                dizionario_dati={}
+                
+                # Dizionario Istanza
+                dizionario_istanza={}
+                dizionario_istanza['Lunghezza Assi']= Max_Axis
+                dizionario_istanza['Stazioni Ricarica']= dizionario_stazioni
+                dizionario_istanza['Citta']= dizionario_citta
+                dizionario_istanza['Dizionario Distanze']= G
+                dizionario_istanza['Autonomia']= k
+
+                dizionario_dati['Dati']= dizionario_istanza
+
+                # Parametri SA
+
+                dizionario_parametri_SA= {}
+
+                dizionario_parametri_SA['NCitta']= N_CITIES
+                dizionario_parametri_SA['Iterazioni']= numero_iterazioni
+                dizionario_parametri_SA['Temperatura']= Temperature
+                dizionario_parametri_SA['Tfrozen']= Tfrozen
+                dizionario_parametri_SA['Fattore Decrescita']= decreaseT
+
+                dizionario_dati['SA']= dizionario_parametri_SA
+
+
+                # Parametri ILS
+                dizionario_parametri_ILS={}
+                dizionario_dati['ILS']= dizionario_parametri_ILS
+
+                # ------------------------------- Salvataggio -------------------------------------------------------------
+                salva_risultati('Istanze', dizionario_soluzioni, dizionario_dati) 
+
+
+                print("\nInserire:")
+                print("\n1) Se continuare a processare le stesse soluzioni costruttive con Simulated Annealing")
+                print("\n0) Se procedere e processare le soluzioni costruttive con Iterative Local Search o terminare il programma")
+                processazione_soluzione= int(input("\nScelta: "))
+                
                 
 
             print("\n----------- Fine Simulated Annealing -----------")
