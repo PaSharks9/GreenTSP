@@ -171,62 +171,96 @@ def calcola_costo(G, k, dizionario_citta, dizionario_stazioni, percorso):
     return tempo_tot, distanza_percorsa
 
 
-def simulated_annealing(dizionario_soluzione, dizionario_citta, dizionario_stazioni, G, k, Temperatura, decreaseT,Tfrozen, numero_iterazioni, n_esecuzioni):
+def simulated_annealing(dizionario_soluzione, dizionario_citta, dizionario_stazioni, G, k, Temperatura, decreaseT,Tfrozen, numero_iterazioni):
     dizionario_migliori={}
     
     dizionario_SA= {}
 
-    esec= 0
-    while esec < n_esecuzioni:
-        # Inizializzo i dati
+    # Inizializzo i dati
 
-        dizionario_sol_migliori= {}
-        start_esecuzione= time.time()
+    dizionario_sol_migliori= {}
+    start_esecuzione= time.time()
 
-        Temperature= Temperatura
-        soluzione_iniziale= dizionario_soluzione.get('percorso')
-        distanza_soluzione_iniziale= dizionario_soluzione.get('distanza')
-        tempo_totale_sol_iniziale= dizionario_soluzione.get('tempo_tot')
+    Temperature= Temperatura
+    soluzione_iniziale= dizionario_soluzione.get('percorso')
+    distanza_soluzione_iniziale= dizionario_soluzione.get('distanza')
+    tempo_totale_sol_iniziale= dizionario_soluzione.get('tempo_tot')
 
 
-        soluzione_precedente= soluzione_iniziale
-        soluzione_corrente= soluzione_iniziale
-        soluzione_migliore= soluzione_corrente
+    soluzione_precedente= soluzione_iniziale
+    soluzione_corrente= soluzione_iniziale
+    soluzione_migliore= soluzione_corrente
 
 
-        costo_soluzione_precedente= tempo_totale_sol_iniziale
-        costo_soluzione_corrente= tempo_totale_sol_iniziale
-        costo_soluzione_migliore= costo_soluzione_corrente
+    costo_soluzione_precedente= tempo_totale_sol_iniziale
+    costo_soluzione_corrente= tempo_totale_sol_iniziale
+    costo_soluzione_migliore= costo_soluzione_corrente
 
-        distanza_percorsa_soluzione_corrente= distanza_soluzione_iniziale
-        distanza_percorsa_migliore= distanza_soluzione_iniziale
-        distanza_percorsa_precedente= distanza_soluzione_iniziale
+    distanza_percorsa_soluzione_corrente= distanza_soluzione_iniziale
+    distanza_percorsa_migliore= distanza_soluzione_iniziale
+    distanza_percorsa_precedente= distanza_soluzione_iniziale
 
 
+    iterazione_fallimento= 0
+    start_time= time.time()
+    while Temperature > Tfrozen:
+
+        j= 0
+        check_time= time.time() - start_time
+
+        if iterazione_fallimento == numero_iterazioni //2 and check_time < 1200:
+            # Ripristino la temperatura allo stato precedente
+            Temperature = Temperature * decreaseT
+
+        iteration= 0
         iterazione_fallimento= 0
-        start_time= time.time()
-        while Temperature > Tfrozen:
+        # Cercare un numero di iterazioni per considerarsi in equilibrio
+        while iteration < numero_iterazioni:  
 
-            j= 0
-            check_time= time.time() - start_time
+            # ricerca random soluzione nell'intorno 2-opt
+            archi_scelti, new_solution= two_opt(soluzione_corrente, dizionario_citta, dizionario_stazioni)
+            costo_new_solution, distanza_percorsa_new_sol= calcola_costo(G,k,dizionario_citta,dizionario_stazioni, new_solution)  # I costi sono dati dal tempo totale speso per il percorso( compreso il tempo di ricarica )
 
-            if iterazione_fallimento == numero_iterazioni //2 and check_time < 1200:
-                # Ripristino la temperatura allo stato precedente
-                Temperature = Temperature * decreaseT
+            delta_E= costo_new_solution - costo_soluzione_corrente
+            print("delta_E: "+ str(delta_E))
 
-            iteration= 0
-            iterazione_fallimento= 0
-            # Cercare un numero di iterazioni per considerarsi in equilibrio
-            while iteration < numero_iterazioni:  
+            if delta_E <= 0:
 
-                # ricerca random soluzione nell'intorno 2-opt
-                archi_scelti, new_solution= two_opt(soluzione_corrente, dizionario_citta, dizionario_stazioni)
-                costo_new_solution, distanza_percorsa_new_sol= calcola_costo(G,k,dizionario_citta,dizionario_stazioni, new_solution)  # I costi sono dati dal tempo totale speso per il percorso( compreso il tempo di ricarica )
+                soluzione_precedente= soluzione_corrente
+                costo_soluzione_precedente= costo_soluzione_corrente
+                distanza_percorsa_precedente= distanza_percorsa_soluzione_corrente
 
-                delta_E= costo_new_solution - costo_soluzione_corrente
-                print("delta_E: "+ str(delta_E))
+                soluzione_corrente= new_solution
+                costo_soluzione_corrente= costo_new_solution
+                distanza_percorsa_soluzione_corrente= distanza_percorsa_new_sol
 
-                if delta_E <= 0:
+
+                # La soluzine migliore deve essere accettabile perchè è quella restituita
+
+                risultato_correttezza= soluzione_accettabile(soluzione_corrente, G, k, dizionario_citta, dizionario_stazioni)
+                
+                if risultato_correttezza and costo_soluzione_corrente <= costo_soluzione_migliore :
+                    print("iteration:" + str(iteration))
+                    print("Temperature: " + str(Temperature))
+                    print("soluzione_corrente: " + str(soluzione_corrente))
+                    print("soluzione_migliore: " + str(soluzione_migliore))
+                    print("Archi_scelti: " + str(archi_scelti))
+                    time.sleep(10)
+                    j +=1
+                    dizionario_sol_migliori[j]= [soluzione_corrente,Temperature,iteration,costo_soluzione_corrente,soluzione_migliore,archi_scelti]
+
+                    soluzione_migliore= new_solution
+                    costo_soluzione_migliore= costo_new_solution
+                    distanza_percorsa_migliore= distanza_percorsa_new_sol
+
+            else:
+                random_choice= round(random.random(),2)
+                
+                print("random_choice: "+ str(random_choice))
+                exponential_value= math.exp(-delta_E/Temperature)
+                print("exponential_value: " + str(exponential_value))
+
+                if random_choice < exponential_value:
 
                     soluzione_precedente= soluzione_corrente
                     costo_soluzione_precedente= costo_soluzione_corrente
@@ -235,80 +269,43 @@ def simulated_annealing(dizionario_soluzione, dizionario_citta, dizionario_stazi
                     soluzione_corrente= new_solution
                     costo_soluzione_corrente= costo_new_solution
                     distanza_percorsa_soluzione_corrente= distanza_percorsa_new_sol
-
-
-                    # La soluzine migliore deve essere accettabile perchè è quella restituita
-
-                    risultato_correttezza= soluzione_accettabile(soluzione_corrente, G, k, dizionario_citta, dizionario_stazioni)
                     
-                    if risultato_correttezza and costo_soluzione_corrente <= costo_soluzione_migliore :
-                        print("iteration:" + str(iteration))
-                        print("Temperature: " + str(Temperature))
-                        print("soluzione_corrente: " + str(soluzione_corrente))
-                        print("soluzione_migliore: " + str(soluzione_migliore))
-                        print("Archi_scelti: " + str(archi_scelti))
-                        time.sleep(10)
-                        j +=1
-                        dizionario_sol_migliori[j]= [soluzione_corrente,Temperature,iteration,costo_soluzione_corrente,soluzione_migliore,archi_scelti]
 
-                        soluzione_migliore= new_solution
-                        costo_soluzione_migliore= costo_new_solution
-                        distanza_percorsa_migliore= distanza_percorsa_new_sol
-
-                else:
-                    random_choice= round(random.random(),2)
-                    
-                    print("random_choice: "+ str(random_choice))
-                    exponential_value= math.exp(-delta_E/Temperature)
-                    print("exponential_value: " + str(exponential_value))
-
-                    if random_choice < exponential_value:
-
-                        soluzione_precedente= soluzione_corrente
-                        costo_soluzione_precedente= costo_soluzione_corrente
-                        distanza_percorsa_precedente= distanza_percorsa_soluzione_corrente
-
-                        soluzione_corrente= new_solution
-                        costo_soluzione_corrente= costo_new_solution
-                        distanza_percorsa_soluzione_corrente= distanza_percorsa_new_sol
-                        
-
-                # Per aver raggiunto l'equilibrio la soluzione deve essere ammissibile, quindi devo fare un controllo sull'ammissibilità della soluzione, altrimenti continuo a rimanere nel ciclo
-                if iteration == numero_iterazioni - 1:
-                    # Se siamo nell'ultima iterazione devo controllare che la soluzione sia accettabile 
-                    if soluzione_accettabile(soluzione_corrente, G, k, dizionario_citta, dizionario_stazioni):
-                        # Se la soluzione è accettabile, aumento iteration e usciro dal ciclo delle iterazioni in quanto siamo in una situazione stabile
-                        iteration += 1
-                    else:
-                        if iterazione_fallimento == numero_iterazioni // 2:
-                            # Se non è riuscito a rientrare in una situazione di stabilità torno nello stato stabile precedente e rifaccio la computazione, sperando che la componente casuale mi faccia uscire dal loop
-                            soluzione_corrente= soluzione_precedente
-                            costo_soluzione_corrente= costo_soluzione_precedente
-                            distanza_percorsa_soluzione_corrente= distanza_percorsa_precedente
-                            break   
-                        
-                        print("soluzione non accettabile, continuo a iterare anche se dovrei abbassare la T")
-                        iterazione_fallimento += 1
-                    # Se invece la soluzione corrente non è accettabile alla fine delle n iterazioni, non siamo in una situazione di equilibrio (in quanto la soluzione non è accettabile) e quindi non aumento il contatore e continuo a iterare fino a quando non trovo una soluzione accettabile
-                else:
+            # Per aver raggiunto l'equilibrio la soluzione deve essere ammissibile, quindi devo fare un controllo sull'ammissibilità della soluzione, altrimenti continuo a rimanere nel ciclo
+            if iteration == numero_iterazioni - 1:
+                # Se siamo nell'ultima iterazione devo controllare che la soluzione sia accettabile 
+                if soluzione_accettabile(soluzione_corrente, G, k, dizionario_citta, dizionario_stazioni):
+                    # Se la soluzione è accettabile, aumento iteration e usciro dal ciclo delle iterazioni in quanto siamo in una situazione stabile
                     iteration += 1
-            
-            # Finito While
-            Temperature= Temperature * decreaseT
-            print("\n ==================================================================")    
-        fine_esecuzione= time.time()
-        dizionario_Esecuzione= {}
+                else:
+                    if iterazione_fallimento == numero_iterazioni // 2:
+                        # Se non è riuscito a rientrare in una situazione di stabilità torno nello stato stabile precedente e rifaccio la computazione, sperando che la componente casuale mi faccia uscire dal loop
+                        soluzione_corrente= soluzione_precedente
+                        costo_soluzione_corrente= costo_soluzione_precedente
+                        distanza_percorsa_soluzione_corrente= distanza_percorsa_precedente
+                        break   
+                    
+                    print("soluzione non accettabile, continuo a iterare anche se dovrei abbassare la T")
+                    iterazione_fallimento += 1
+                # Se invece la soluzione corrente non è accettabile alla fine delle n iterazioni, non siamo in una situazione di equilibrio (in quanto la soluzione non è accettabile) e quindi non aumento il contatore e continuo a iterare fino a quando non trovo una soluzione accettabile
+            else:
+                iteration += 1
+        
+        # Finito While
+        Temperature= Temperature * decreaseT
+        print("\n ==================================================================")    
+    fine_esecuzione= time.time()
+    dizionario_Esecuzione= {}
 
 
-        dizionario_Esecuzione['soluzione_migliore']= soluzione_migliore
-        dizionario_Esecuzione['costo_sol_migliore']= costo_soluzione_migliore
-        dizionario_Esecuzione['distanza_percorsa_migliore']= distanza_percorsa_migliore
-        dizionario_Esecuzione['tempo_esecuzione']= fine_esecuzione - start_esecuzione 
-        dizionario_SA[esec]= dizionario_Esecuzione
+    dizionario_Esecuzione['soluzione_migliore']= soluzione_migliore
+    dizionario_Esecuzione['costo_sol_migliore']= costo_soluzione_migliore
+    dizionario_Esecuzione['distanza_percorsa_migliore']= distanza_percorsa_migliore
+    dizionario_Esecuzione['tempo_esecuzione']= fine_esecuzione - start_esecuzione 
+    dizionario_SA[esec]= dizionario_Esecuzione
 
-        dizionario_migliori[esec]= dizionario_sol_migliori
+    dizionario_migliori[esec]= dizionario_sol_migliori
 
-        esec += 1
 
     return dizionario_SA, dizionario_migliori
 
