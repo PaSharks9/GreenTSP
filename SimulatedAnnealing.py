@@ -172,48 +172,49 @@ def calcola_costo(G, k, dizionario_citta, dizionario_stazioni, percorso):
 
 
 def simulated_annealing(dizionario_soluzione, dizionario_citta, dizionario_stazioni, G, k, Temperatura, decreaseT,Tfrozen, numero_iterazioni):
-    dizionario_migliori={}
-    
-    dizionario_SA= {}
 
-    # Inizializzo i dati
+    # Inizializzo i dati di riferimento
 
     dizionario_sol_migliori= {}
-    start_esecuzione= time.time()
 
-    Temperature= Temperatura
+    # Dati soluzione iniziale
     soluzione_iniziale= dizionario_soluzione.get('percorso')
     distanza_soluzione_iniziale= dizionario_soluzione.get('distanza')
     tempo_totale_sol_iniziale= dizionario_soluzione.get('tempo_tot')
 
-
-    soluzione_precedente= soluzione_iniziale
+    # Inizializzo le 3 soluzioni di riferimento
+    # soluzione_precedente= soluzione_iniziale
     soluzione_corrente= soluzione_iniziale
     soluzione_migliore= soluzione_corrente
 
-
-    costo_soluzione_precedente= tempo_totale_sol_iniziale
+    # Inizializzo i 3 costi di riferimento
+    # costo_soluzione_precedente= tempo_totale_sol_iniziale
     costo_soluzione_corrente= tempo_totale_sol_iniziale
     costo_soluzione_migliore= costo_soluzione_corrente
 
+    # Inizializzo le 3 distanze totali percorse di riferimento
     distanza_percorsa_soluzione_corrente= distanza_soluzione_iniziale
     distanza_percorsa_migliore= distanza_soluzione_iniziale
-    distanza_percorsa_precedente= distanza_soluzione_iniziale
+    # distanza_percorsa_precedente= distanza_soluzione_iniziale
 
+    Temperature= Temperatura
+    
+    # Iterazione_fallimento serve per cercare di raggiungere una situazione stabile entro Iterazione//2, altrimenti si ripristina lo stato precedente(temperatura e soluzioni) e si riparte
+    # iterazione_fallimento= 0
 
-    iterazione_fallimento= 0
-    start_time= time.time()
+    j= 0 # parametro per salvare la chiave del numero delle soluzioni di evoluzione
+
+    start_esecuzione= time.time()
     while Temperature > Tfrozen:
 
-        j= 0
-        check_time= time.time() - start_time
+        """check_time= time.time() - start_esecuzione
 
         if iterazione_fallimento == numero_iterazioni //2 and check_time < 1200:
             # Ripristino la temperatura allo stato precedente
-            Temperature = Temperature * decreaseT
+            Temperature = Temperature * decreaseT"""
 
         iteration= 0
-        iterazione_fallimento= 0
+        # iterazione_fallimento= 0
         # Cercare un numero di iterazioni per considerarsi in equilibrio
         while iteration < numero_iterazioni:  
 
@@ -225,35 +226,48 @@ def simulated_annealing(dizionario_soluzione, dizionario_citta, dizionario_stazi
             print("delta_E: "+ str(delta_E))
 
             if delta_E <= 0:
+                
+                # Siccome ho un miglioramento con la nuova soluzione rispetto a quella corrente, aggiorno le soluzioni
 
-                soluzione_precedente= soluzione_corrente
+                # La soluzione corrente diventa quella precedente ( serve tenerne traccia per le condizioni di stabilita )
+                """soluzione_precedente= soluzione_corrente
                 costo_soluzione_precedente= costo_soluzione_corrente
-                distanza_percorsa_precedente= distanza_percorsa_soluzione_corrente
+                distanza_percorsa_precedente= distanza_percorsa_soluzione_corrente"""
 
+                # La nuova soluzione trovata diventa quella corrente
                 soluzione_corrente= new_solution
                 costo_soluzione_corrente= costo_new_solution
                 distanza_percorsa_soluzione_corrente= distanza_percorsa_new_sol
 
 
-                # La soluzine migliore deve essere accettabile perchè è quella restituita
+                # Ora controllo che la soluzione corrente sia migliore della soluzione migliore, prima però devo verificare che la soluzione corrente (ex new_solution) sia anche accettabile 
+                # in quanto la soluzione_migliore deve essere SEMPRE accettabile in quanto è quella ritornata dall'algoritmo quando finisce
 
                 risultato_correttezza= soluzione_accettabile(soluzione_corrente, G, k, dizionario_citta, dizionario_stazioni)
                 
                 if risultato_correttezza and costo_soluzione_corrente <= costo_soluzione_migliore :
+                    
+                    # In archi_scelti ho gli indici, ora tiro fuori i nodi relativi, per tenere traccia di quali archi scelti hanno portato al miglioramento, mi serve per controllare il corretto funzionamento
+                    arco1= [soluzione_corrente[archi_scelti[0][0]], soluzione_corrente[archi_scelti[0][1]]]
+                    arco2= [soluzione_corrente[archi_scelti[1][0]], soluzione_corrente[archi_scelti[1][1]]]
+                    archi_scelti= [arco1,arco2]
                     print("iteration:" + str(iteration))
                     print("Temperature: " + str(Temperature))
                     print("soluzione_corrente: " + str(soluzione_corrente))
                     print("soluzione_migliore: " + str(soluzione_migliore))
                     print("Archi_scelti: " + str(archi_scelti))
-                    time.sleep(10)
+                    #time.sleep(10)
                     j +=1
-                    dizionario_sol_migliori[j]= [soluzione_corrente,Temperature,iteration,costo_soluzione_corrente,soluzione_migliore,archi_scelti]
+                    
+                    dizionario_sol_migliori[j]= [soluzione_migliore, costo_soluzione_migliore, soluzione_corrente, costo_soluzione_corrente, Temperature, iteration, archi_scelti]
 
-                    soluzione_migliore= new_solution
-                    costo_soluzione_migliore= costo_new_solution
-                    distanza_percorsa_migliore= distanza_percorsa_new_sol
+                    soluzione_migliore= soluzione_corrente
+                    costo_soluzione_migliore= costo_soluzione_corrente
+                    distanza_percorsa_migliore= distanza_percorsa_soluzione_corrente
 
             else:
+                # Se sono qui la soluzione nuova che ho trovato non è migliore di quella corrente
+
                 random_choice= round(random.random(),2)
                 
                 print("random_choice: "+ str(random_choice))
@@ -261,18 +275,24 @@ def simulated_annealing(dizionario_soluzione, dizionario_citta, dizionario_stazi
                 print("exponential_value: " + str(exponential_value))
 
                 if random_choice < exponential_value:
+                    # Se random_choice è minore del valore esponenziale allora cambio soluzione corrente con quella nuova, anche se ciò non comporta un miglioramento
+                    # questo viene fatto per provare a sfuggire agli eventuali ottimi locali
 
-                    soluzione_precedente= soluzione_corrente
+                    """soluzione_precedente= soluzione_corrente
                     costo_soluzione_precedente= costo_soluzione_corrente
-                    distanza_percorsa_precedente= distanza_percorsa_soluzione_corrente
+                    distanza_percorsa_precedente= distanza_percorsa_soluzione_corrente"""
 
                     soluzione_corrente= new_solution
                     costo_soluzione_corrente= costo_new_solution
                     distanza_percorsa_soluzione_corrente= distanza_percorsa_new_sol
-                    
 
-            # Per aver raggiunto l'equilibrio la soluzione deve essere ammissibile, quindi devo fare un controllo sull'ammissibilità della soluzione, altrimenti continuo a rimanere nel ciclo
-            if iteration == numero_iterazioni - 1:
+            
+            iteration += 1
+            # !!!!!!!!!Valutare se togliere questa cosa o no, va contro all'idea di ammissibilità di soluzione peggiorativa per evitare gli ottimi locali!!!!!!!!!!
+             
+            # Uscito dal controllo sul deltaE, controllo se sono nel caso per verificare la correttezza della soluzione        
+            # Per aver raggiunto l'equilibrio la soluzione corrente deve essere ammissibile, quindi devo fare un controllo sull'ammissibilità della soluzione, altrimenti continuo a rimanere nel ciclo
+            """if iteration == numero_iterazioni - 1:
                 # Se siamo nell'ultima iterazione devo controllare che la soluzione sia accettabile 
                 if soluzione_accettabile(soluzione_corrente, G, k, dizionario_citta, dizionario_stazioni):
                     # Se la soluzione è accettabile, aumento iteration e usciro dal ciclo delle iterazioni in quanto siamo in una situazione stabile
@@ -289,25 +309,23 @@ def simulated_annealing(dizionario_soluzione, dizionario_citta, dizionario_stazi
                     iterazione_fallimento += 1
                 # Se invece la soluzione corrente non è accettabile alla fine delle n iterazioni, non siamo in una situazione di equilibrio (in quanto la soluzione non è accettabile) e quindi non aumento il contatore e continuo a iterare fino a quando non trovo una soluzione accettabile
             else:
-                iteration += 1
+                iteration += 1"""
         
         # Finito While
         Temperature= Temperature * decreaseT
         print("\n ==================================================================")    
-    fine_esecuzione= time.time()
-    dizionario_Esecuzione= {}
+    
+    end_esecuzione= time.time()
 
+    dizionario_SA= {}
 
-    dizionario_Esecuzione['soluzione_migliore']= soluzione_migliore
-    dizionario_Esecuzione['costo_sol_migliore']= costo_soluzione_migliore
-    dizionario_Esecuzione['distanza_percorsa_migliore']= distanza_percorsa_migliore
-    dizionario_Esecuzione['tempo_esecuzione']= fine_esecuzione - start_esecuzione 
-    dizionario_SA[esec]= dizionario_Esecuzione
+    dizionario_SA['Percorso'] = soluzione_migliore
+    dizionario_SA['Distanza Totale']= distanza_percorsa_migliore
+    dizionario_SA['Tempo Totale']= costo_soluzione_migliore
+    dizionario_SA['Tempo Ricarica']= costo_soluzione_migliore - distanza_percorsa_migliore
+    dizionario_SA['Tempo Esecuzione']= end_esecuzione - start_esecuzione
 
-    dizionario_migliori[esec]= dizionario_sol_migliori
-
-
-    return dizionario_SA, dizionario_migliori
+    return dizionario_SA, dizionario_sol_migliori
 
 
 

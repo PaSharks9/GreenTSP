@@ -160,17 +160,70 @@ if __name__ == "__main__":
             while processazione_soluzione != 0: 
                 print("Scegliere il tipo di esecuzione del SA: ")
                 print("\n1) Manuale")
-                print("\n2)Da File Config (Testing)")
-                scelta_esecuzione= int(input("Scelta"))
+                print("\n2) Da File Config (Testing, lettura dei parametri da file di config)")
+                scelta_esecuzione= int(input("\nScelta: "))
 
                 while scelta_esecuzione != 1 and scelta_esecuzione!= 2:
                     print("scelta non valida, riprovare...")
                     print("\nScegliere il tipo di esecuzione del SA: ")
-                    print("\n1) Automatica (Testing, lettura dei parametri da file di config)")
-                    print("\n2) Manuale")
-                    scelta_esecuzione= int(input("Scelta"))
+                    print("\n1) Manuale ")
+                    print("\n2) Automatica (Testing, lettura dei parametri da file di config)")
+                    scelta_esecuzione= int(input("\nScelta: "))
 
-                if scelta_esecuzione == 1: # Esecuzione Automatica
+                if scelta_esecuzione == 1: # Esecuzione Manuale
+
+                    # Impostazione parametri di Default
+                    numero_iterazioni= math.factorial(N_CITIES-1)//500
+                    Temperature=  N_CITIES*100
+                    decreaseT= 0.90
+                    Tfrozen= 10
+                    n_esecuzioni= 5
+                    
+                    print("\n----------------------Parametri di Default:----------------------")
+                    print("Temperature: " + str(Temperature))
+                    print("Fattore di decrescita: " + str(decreaseT))
+                    print("Tfrozen: " + str(Tfrozen))
+                    print("Numero Iterazioni: " + str(numero_iterazioni))
+                    print("Numero di esecuzioni dell'algoritmo: " + str(n_esecuzioni))
+                    print("\n-----------------------------------------------------------------")
+
+                    print("\n\nScelta letture parametri:")
+                    print("\n1) Uso dei parametri di default")
+                    print("\n2) Inserimento manuale parametri")
+                    scelta_param= int(input("\nScelta: "))
+                    while scelta_param != 1 and scelta_param != 2:
+                        print("\n\nscelta non valida, riprovare..")
+                        print("\n\nMenu selezione metodologia scelta parametri:")
+                        print("\n1) Uso dei parametri di default")
+                        print("\n2) Inserimento manuale parametri")
+                        scelta_param= int(input("\nScelta: "))
+
+                    if scelta_param == 2:
+                        numero_iterazioni= int(input("\nInserire il numero di iterazioni da effettuare: "))
+                        Temperature= int(input("\nInserire la temperatura iniziale desiderata: "))
+                        Tfrozen= int(input("\nInserire il valore di TFrozen: "))
+                        n_esecuzioni= int(input("\nInserire il numero di volte che si vuole eseguire l'algoritmo: "))
+                        decreaseT= float(input("\nInserire il fattore di diminuzione della temperatura (valore compreso tra 0 e 1): "))
+
+
+                    print("\nScegliere quale soluzione processare tramite Simulated Annealing: ")
+                    print("-1 Nearest Neighbour Solution")
+                    print("-2 Christofides Solution")
+                    print("-3 Entrambe le soluzioni")
+                    print("-0 Exit")
+                    scelta_soluzione= int(input("\nScelta: "))
+
+                    while scelta_soluzione not in range(0,4):
+                        print("\nscelta non valida, riprovare...")
+                        print("\nScegliere quale soluzione processare tramite Simulated Annealing: ")
+                        print("-1 Nearest Neighbour Solution")
+                        print("-2 Christofides Solution")
+                        print("-3 Entrambe le soluzioni")
+                        print("-0 Exit")
+                        scelta_soluzione= int(input("\nScelta: "))
+
+                elif scelta_esecuzione == 2:  # Esecuzione Automatica
+                    print("dentro esecuzione automatica")
                     config_file= open("config_file.txt", 'r')
                     # Temperature, decreaseT, Tfrozen, numero_iterazioni, n_esecuzioni
                     i= 0
@@ -178,7 +231,7 @@ if __name__ == "__main__":
                     dizionario_config={}
                     dizionario={}
                     for line in config_file:
-                        print("line: " + str(line))
+                        #print("line: " + str(line))
                         if line != '\n' and '%' not in line:
                             i += 1
                             if i == 1:
@@ -203,72 +256,22 @@ if __name__ == "__main__":
                                 dizionario_config[n_esecuzione]= dizionario
                                 dizionario={} 
                                 i= 0
-                        config_file.close()
-
-                elif scelta_esecuzione == 2:  # Esecuzione Manuale
-                    
-                    # Impostazione parametri di Default
-                    numero_iterazioni= math.factorial(N_CITIES-1)//500
-                    Temperature=  N_CITIES*100
-                    decreaseT= 0,90
-                    Tfrozen= 10
-                    n_esecuzioni= 5
-                    
-                    print("\n----------------------Parametri di Default:----------------------")
-                    print("Temperature: " + str(Temperature))
-                    print("Fattore di decrescita: " + str(decreaseT))
-                    print("Tfrozen: " + str(Tfrozen))
-                    print("Numero Iterazioni: " + str(numero_iterazioni))
-                    print("Numero di esecuzioni dell'algoritmo: " + str(n_esecuzioni))
-                    print("\n-----------------------------------------------------------------")
-
-                    print("\n\nScelta letture parametri:")
-                    print("\n1) Uso dei parametri di default")
-                    print("\n2) Inserimento manuale parametri")
-                    scelta_param= int(input("Scelta: "))
-                    while scelta_param != 1 and scelta_param != 2:
-                        print("\n\nscelta non valida, riprovare..")
-                        print("\n\nMenu selezione metodologia scelta parametri:")
-                        print("\n1) Uso dei parametri di default")
-                        print("\n2) Inserimento manuale parametri")
-                        scelta_param= int(input("Scelta: "))
-
-                    if scelta_param == 2:
-                        numero_iterazioni= int(input("\nInserire il numero di iterazioni da effettuare: "))
-                        Temperature= int(input("\nInserire la temperatura iniziale desiderata: "))
-                        Tfrozen= int(input("\nInserire il valore di TFrozen: "))
-                        n_esecuzioni= int(input("\nInserire il numero di volte che si vuole eseguire l'algoritmo: "))
-                        decreaseT= float(input("\nInserire il fattore di diminuzione della temperatura (valore compreso tra 0 e 1): "))
-
-
-                    print("\nScegliere quale soluzione processare tramite Simulated Annealing: ")
-                    print("-1 Nearest Neighbour Solution")
-                    print("-2 Christofides Solution")
-                    print("-3 Entrambe le soluzioni")
-                    print("-0 Exit")
-                    scelta_soluzione= int(input("Scelta: "))
-
-                    while scelta_soluzione not in range(0,4):
-                        print("\nscelta non valida, riprovare...")
-                        print("\nScegliere quale soluzione processare tramite Simulated Annealing: ")
-                        print("-1 Nearest Neighbour Solution")
-                        print("-2 Christofides Solution")
-                        print("-3 Entrambe le soluzioni")
-                        print("-0 Exit")
-                        scelta_soluzione= int(input("Scelta: "))
+                    config_file.close()
 
                 
-                if scelta_esecuzione == 1:  # Se l'esecuzione è automatica devo capire quante chiamate devo fare
-                    n_chiamate= list(dizionario_config.keys())
+                if scelta_esecuzione == 2:  # Se l'esecuzione è automatica devo capire quante chiamate devo fare
+                    n_chiamate= len(list(dizionario_config.keys()))
+                    n_chiamate += 1
+                    print("n_chiamate: " + str(n_chiamate))
                 else: 
                     # Se l'esecuzione non è automatica c'è solo una chiamata
-                    n_chiamate= 1   
+                    n_chiamate= 2   
 
-                chiamata= 0
+                chiamata= 1
                 while chiamata < n_chiamate:    
                     
-                    # Inizializzo gli eventuali parametri
-                    if scelta_esecuzione == 1:
+                    # Inizializzo gli eventuali parametri, se esecuzione automatica
+                    if scelta_esecuzione == 2:
                         dizionario_chiamata= dizionario_config[chiamata]
 
                         scelta_soluzione= dizionario_chiamata['scelta_soluzione']
@@ -366,6 +369,7 @@ if __name__ == "__main__":
 
                     dizionario_MetaEuristiche['SA']= dizionario_SA
 
+                    dizionario_soluzioni['Meta Euristiche']= dizionario_MetaEuristiche
                     # ------------------------------------------------------------------------------------------------------------   
                     # ------------------------------- Salvataggio ----------------------------------------------------------------
                     # Ad ogni chiamata del SA salvo i dati

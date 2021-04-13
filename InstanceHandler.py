@@ -472,7 +472,7 @@ def salva_risultati(dizionario_soluzioni, dizionario_dati):
                     dizionariC= dizionario_SA_C[int(esecuzione)]
                     dizionario_SA_C_Esecuzione= dizionariC[0]
 
-                    dizionario_evoluzione[esecuzione]= dizionariNN[1]
+                    dizionario_evoluzione[esecuzione]= dizionariC[1]
 
                     f.write("\n--------------------------------------------------")
                     f.write("\n\nEsecuzione n: " + str(esecuzione))
