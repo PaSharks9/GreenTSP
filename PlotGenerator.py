@@ -498,9 +498,10 @@ def draw_Christofides_green(christofides_graph, dizionario_citta, dizionario_sta
     # --------------------- Disegno Righe ----------------------------------
     cities= list(dizionario_citta.keys())
     cities.append(0)
-    
+
     # i = 0
     for vertex in cities:
+
         edge_v= christofides_graph.get(int(vertex))
 
         nodes_u= list(edge_v.keys())
@@ -515,8 +516,8 @@ def draw_Christofides_green(christofides_graph, dizionario_citta, dizionario_sta
 
             if u != 0:
                 if 'S' in str(u):
-                    print("Dentro Plot Generator")
-                    print("u: " + str(u))
+                    #print("Dentro Plot Generator")
+                    #print("u: " + str(u))
                     key = u.replace('S','')
                     coordinate2= dizionario_stazioni.get(int(key))
                 else:

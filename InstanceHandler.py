@@ -496,7 +496,7 @@ def salva_risultati(dizionario_soluzioni, dizionario_dati):
 
                 chiavi= list(dizionario_Evoluzione_Soluzioni_C.keys())
                 for chiave in chiavi:
-                    valori= dizionario_Evoluzione_Soluzioni_NN[chiave]
+                    valori= dizionario_Evoluzione_Soluzioni_C[chiave]
                     f.write("\n" + str(chiave) + ") ")
                     f.write("\n Soluzione precedente: " + str(valori[0]))
                     f.write("\n Costo Soluzione precedente: " + str(valori[1]))

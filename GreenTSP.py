@@ -4,7 +4,7 @@ import PlotGenerator as plt
 from SimulatedAnnealing import simulated_annealing
 from InstanceHandler import generateInstance, manualInstance, leggi_istanza, salva_risultati
 from PlotGenerator import draw_map, print_2_opt, print_2_opt_arc_selected
-from ConstructiveEuristic import NearestNeighbour, Christofides_Algorithm, NearestNeighbour_ottimizzazione_ricarica, create_distance_dict
+from ConstructiveEuristic import NearestNeighbour, Christofides_Algorithm, create_distance_dict
 from Cliente import euclidean_distance
 from LocalSearch import two_opt
 
@@ -173,9 +173,10 @@ if __name__ == "__main__":
                 if scelta_esecuzione == 1: # Esecuzione Manuale
 
                     # Impostazione parametri di Default
-                    numero_iterazioni= math.factorial(N_CITIES-1)//500
-                    Temperature=  N_CITIES*100
-                    decreaseT= 0.90
+                    # numero_iterazioni= math.factorial(N_CITIES-1)
+                    numero_iterazioni= math.factorial(9)
+                    Temperature=  10000
+                    decreaseT= 0.95
                     Tfrozen= 10
                     n_esecuzioni= 5
                     

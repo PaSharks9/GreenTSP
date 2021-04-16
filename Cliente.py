@@ -13,6 +13,199 @@ def euclidean_distance(A,B):
 
     return int(d)
 
+
+def soluzione_accettabile(percorso, G, k, dizionario_citta, dizionario_stazioni):
+    index= 0
+    autonomia= k
+    while index < len(percorso) - 1:
+        """print("index/percorso: ")
+        print(str(index) + "/" + str(len(percorso)))
+        print("\nNodo1: " + str(percorso[index]))
+        print("Nodo2: " + str(percorso[index + 1]))
+        print("\nautonomia: " + str(autonomia))"""
+        if 'S' not in str(percorso[index]) and 'S' not in str(percorso[index+1]):
+            distanza_da_percorrere= G[percorso[index]][percorso[index+1]]
+            #print("distanza_da_percorrere: " + str(distanza_da_percorrere))
+            if autonomia - distanza_da_percorrere < 0:
+                # Significa che non è una soluzione accettabile
+                return False
+            else:
+                autonomia -= distanza_da_percorrere
+
+        elif 'S' in str(percorso[index]) and 'S' not in str(percorso[index + 1]): # Tratta da una stazione 
+            
+            # Parto da una stazione, quindi avrò autonomia massima
+            autonomia= k
+            #print("Autonomia Ricaricata: " + str(autonomia))
+            if percorso[index + 1] != 0:
+                # Devo solo controllare di avere autonomia sufficiente per arrivare nella citta successiva
+                nodo_stazione= int(percorso[index].replace('S',''))
+                coordinate_stazione= dizionario_stazioni.get(nodo_stazione)
+                #print("coordinate_stazione: " + str(coordinate_stazione))
+
+                nodo_citta= dizionario_citta.get(int(percorso[index + 1]))
+                coordinate_citta= nodo_citta.coordinate
+                #print("coordinate_citta: " + str(coordinate_citta))
+
+                distanza_da_percorrere= euclidean_distance(coordinate_stazione, coordinate_citta)
+                #print("distanza_da_percorrere: " + str(distanza_da_percorrere))
+                if autonomia - distanza_da_percorrere < 0:
+                    # Significa che non è una soluzione accettabile
+                    return False
+                else:
+                    autonomia -= distanza_da_percorrere
+
+        elif 'S' not in str(percorso[index]) and 'S' in str(percorso[index + 1]): # Tratta da una citta ad una stazione  (TEORICAMENTE QUESTO if non dovrebbe andare in false perchè i due if precedenti controllano se una volta arrivati nella città successiva si ha autonomia a sufficienza per andare in una stazione)
+            
+            # Considerare caso in cui si parta dal deposito e si vada in una stazione di ricarica (Mossa legale)
+
+            if percorso[index] == 0:
+                coordinate_citta= [0,0]
+            else:
+                nodo_citta= dizionario_citta.get(int(percorso[index]))
+                coordinate_citta= nodo_citta.coordinate
+            #print("coordinate_citta: " + str(coordinate_citta))
+
+            nodo_stazione= int(percorso[index + 1].replace('S',''))
+            coordinate_stazione= dizionario_stazioni.get(nodo_stazione)
+            #print("coordinate_stazione: " + str(coordinate_stazione))
+
+
+            distanza_da_percorrere= euclidean_distance(coordinate_stazione, coordinate_citta)
+            #print("distanza_da_percorrere: " + str(distanza_da_percorrere))
+            if autonomia - distanza_da_percorrere < 0:
+                # Significa che non è una soluzione accettabile
+                return False
+            else:
+                autonomia -= distanza_da_percorrere
+
+        index += 1
+
+    # Se sono arrivato fino a qui significa che tutto è regolare quindi ritorno True
+
+    return True
+
+def calcola_costo(G, k, dizionario_citta, dizionario_stazioni, percorso):
+    distanza_percorsa= 0
+    autonomia= k
+    tempo_tot= 0
+
+    index= 0
+
+    while index < len(percorso) - 1:
+        """print("\nindex/percorso: ")
+        print(str(index) + "/" + str(len(percorso)))
+        print("\nNodo1: " + str(percorso[index]))
+        print("Nodo2: " + str(percorso[index + 1]))
+        print("\nautonomia: " + str(autonomia))"""
+        if 'S' not in str(percorso[index]) and 'S' not in str(percorso[index+1]):  # Significa che è una tratta tra due città e non tra due stazioni o tra una città e stazione
+            
+            #print("\npercorso[index]: " + str(percorso[index]))
+            #print("percorso[index+1]: " + str(percorso[index+1]))
+            distanza_percorsa += G[percorso[index]][percorso[index+1]]
+            #print("distanza: " + str(G[percorso[index]][percorso[index+1]]))
+            #print("distanza_percorsa: " + str(distanza_percorsa))
+            autonomia -= G[percorso[index]][percorso[index+1]]
+
+        elif 'S' in str(percorso[index]) and 'S' not in str(percorso[index + 1]): # Tratta da una stazione ad una citta, la distanza percorsa la devo ricavare dai dizionari citta e stazione
+            
+            #print("\npercorso[index]: " + str(percorso[index]))
+            #print("percorso[index+1]: " + str(percorso[index+1]))
+
+            station= percorso[index]
+            station= station.replace('S','')
+            coordinate_stazione= dizionario_stazioni.get(int(station))
+
+            if percorso[index + 1] == 0:  # caso in cui sia una tratta da stazione a deposito ( ultimo arco del tour )
+                coordinate_citta= [0,0]
+            
+            else:
+                citta= dizionario_citta.get(int(percorso[index + 1]))
+                coordinate_citta= citta.coordinate
+
+            distanza_percorsa += euclidean_distance(coordinate_stazione, coordinate_citta)
+
+            #print("distanza: " + str(euclidean_distance(coordinate_stazione, coordinate_citta)))
+            #print("distanza_percorsa: " + str(distanza_percorsa))
+
+            autonomia -= euclidean_distance(coordinate_stazione, coordinate_citta)
+            #print("autonomia futura: " + str(autonomia))
+        elif 'S' not in str(percorso[index]) and 'S' in str(percorso[index + 1]): # Tratta da una citta ad una stazione, in questa tratta devo considerare anche il tempo di ricarica dato che il costo è il tempo del tour
+            
+            #print("\npercorso[index]: " + str(percorso[index]))
+            #print("percorso[index+1]: " + str(percorso[index+1]))
+            
+            station= percorso[index + 1]
+            station= station.replace('S','')
+            coordinate_stazione= dizionario_stazioni.get(int(station))
+
+            if percorso[index] == 0:  # caso in cui sia una tratta da deposito a stazione ( primo arco del tour )
+                coordinate_citta= [0,0]
+            else:
+                citta= dizionario_citta.get(int(percorso[index]))
+                coordinate_citta= citta.coordinate
+
+            distanza_percorsa += euclidean_distance(coordinate_stazione, coordinate_citta)
+
+            #print("distanza: " + str(euclidean_distance(coordinate_stazione, coordinate_citta)))
+            #print("distanza_percorsa: " + str(distanza_percorsa))
+            
+            autonomia -= euclidean_distance(coordinate_stazione, coordinate_citta)
+
+            # Caso in cui prima di tornare al deposito sono in una stazione, in questo caso la ricarica sarà precisa per tornare al deposito, non carico di più
+            if index + 1 == len(percorso) - 2:  # index+1 è l'indice della stazione , len(percorso) - 2 è l'indice della penultima tappa del percorso
+                distanza_stazione_deposito= euclidean_distance(coordinate_stazione, [0,0])
+                delta_ricarica= distanza_stazione_deposito - autonomia
+            else:
+                delta_ricarica=  k - autonomia
+            
+            #print("delta_ricarica: " + str(delta_ricarica))
+
+            #print("Tempo_ricarica: " + str(0.25*delta_ricarica))
+            tempo_tot +=  0.25*delta_ricarica
+            #print("tempo_tot: " + str(tempo_tot))
+            autonomia= k
+
+            
+        elif 'S' in str(percorso[index]) and 'S' in str(percorso[index + 1]): # Caso in cui da una stazione di rifornimento si vada all'altra         
+            
+            #print("\npercorso[index]: " + str(percorso[index]))
+            #print("percorso[index+1]: " + str(percorso[index+1]))
+
+            station1= percorso[index]
+            station1= station1.replace('S','')
+
+            coordinate_stazione1= dizionario_stazioni.get(int(station1))
+
+            station2= percorso[index + 1]
+            
+            station2= station2.replace('S','')
+
+            coordinate_stazione2= dizionario_stazioni.get(int(station2))
+            
+
+            distanza_percorsa += euclidean_distance(coordinate_stazione1, coordinate_stazione2)
+
+            #print("distanza: " + str(euclidean_distance(coordinate_stazione1, coordinate_stazione2)) )
+            #print("distanza_percorsa: " + str(distanza_percorsa))
+
+            autonomia -= euclidean_distance(coordinate_stazione1, coordinate_stazione2)
+            
+            # Essendo partiti ed arrivati in una stazione si ricarica
+            delta_ricarica=  k - autonomia
+
+            tempo_tot +=  0.25*delta_ricarica
+            #print("tempo_tot: " + str(tempo_tot))
+            autonomia= k
+
+        index += 1
+    
+    tempo_tot += distanza_percorsa
+
+    return tempo_tot, distanza_percorsa
+    
+
+
 class Cliente:
     def __init__(self,x,y,dizionario_stazioni,n):
         # Fintanto che le stazioni le lascio in mezzo ai quadranti, le stazioni più vicine ad ogni cliente è la stazione del proprio quadrante
