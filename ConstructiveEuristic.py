@@ -2,7 +2,7 @@ import copy
 import time
 import os
 import PlotGenerator as plt
-from Cliente import Cliente, euclidean_distance
+from Cliente import Cliente, euclidean_distance, soluzione_accettabile, calcola_costo
 from subprocess import PIPE, Popen
 
 # Conta il numero di città visitate
@@ -1014,7 +1014,7 @@ def create_christofides_graph(mst_graph, G, dizionario_citta, Max_Axis):
 
     return dict_multi_graph_s
 
-def create_green_graph(christofides_graph_no_recharge, dizionario_stazioni, dizionario_citta, k):
+def create_green_graph1(christofides_graph_no_recharge, dizionario_stazioni, dizionario_citta, k):
     # Devo partire dal deposito, la direzione scelta  è quella del collegamento più corto 
     autonomia= k
     tempo_ricarica= 0
@@ -1270,399 +1270,222 @@ def crea_dizionario_percorso(percorso, dizionario_citta, dizionario_stazioni):
     return dizionario_percorso
 
 
+def create_green_graph(christofides_graph_no_recharge, dizionario_stazioni, dizionario_citta, k):
 
-
-
-def look_ahead(current_node, previous_node, offset, christofides_graph_no_recharge, dizionario_stazioni, dizionario_citta):
-    autonomia= offset
-    distanza_percorsa= 0
-    percorso= []
-    print("--------- look ahead ---------")
-    print("current_node: " + str(current_node))
-    print("previous_node: " + str(previous_node))
-    if current_node == 0:
-        percorso = [0]
-
-        # Devo scegliere come secondo nodo (per dare una direzione di percorrenza) il nodo più vicino
-        next_dist= float("inf")   # qualsiasi numero è inferiore a floag("inf")  ( ma non superiore )
-        dict_nodo_dep= christofides_graph_no_recharge.get(int(current_node))
-        linked_nodes= list(dict_nodo_dep.keys())
-        
-        # Cerco il nodo più vicino al deposito
-        for node in linked_nodes:
-            dist_node= dict_nodo_dep.get(int(node))
-            if dist_node[0] <= next_dist:
-                next_dist = dist_node[0]
-                next_node= int(node)
-    else:   
-        # Vado a prendere il nodo successivo
-        dict_current_node = christofides_graph_no_recharge[int(current_node)]
-        linked_nodes= list(dict_current_node.keys())
-
-        for node in linked_nodes:
-            if node != previous_node:
-                next_node= int(node)
-                print("next_node: " + str(next_node))
-                next_distanza= dict_current_node[node]
-                next_dist= next_distanza[0]
-
-
-    autonomia_futura= autonomia - next_dist
-
-    if next_node != 0:
-        next_client= dizionario_citta[next_node]
-        next_distanza_stazione= next_client.distanza_stazione
-
-    while next_node != 0 and autonomia_futura >= next_distanza_stazione : # Finche ho autonomia sufficiente ad arrivare alla stazione di rifornimento della prossima città va tutto bene e inserisco città nel percorso
-        
-        
-        autonomia -= next_dist
-        distanza_percorsa += next_dist 
-
-        # Aggiungo il nodo al percorso
-        percorso.append(next_node)
-
-        previous_node= current_node
-        current_node= next_node
-        
-        dict_current_node= christofides_graph_no_recharge[int(current_node)]
-
-        # Vado a prendere il nodo successivo
-        linked_nodes= list(dict_current_node.keys())
-
-        for node in linked_nodes:
-            if node != previous_node:
-                next_node= int(node)
-
-        # Se il nodo successivo non è il nodo di deposito vado avanti a guardare la mia autonomia futura 
-        if next_node != 0:
-            
-            next_distance= dict_current_node[next_node]
-            next_dist= next_distance[0]
-
-            autonomia_futura= autonomia - next_dist
-            
-            # Prendo la distanza del nodo successivo dalla sua stazione di ricarica cosicchè il while potra fare il controllo
-            next_client= dizionario_citta[next_node]
-            next_distanza_stazione= next_client.distanza_stazione
-
-
-        # Se non entro nell'if vuol dire che il nodo successivo è il nodo di deposito e quindi significa che sono arrivato alla fine del percorso
-
-    # -------------------------------------------------------- fuori while -------------------------------------------------------------------------
-
-    # Controllo se il motivo per cui sono uscito dal while è perchè ho come prossimo nodo il nodo di deposito o perchè non ho autonomia suff per andare alla stazione di ricarica del nodo successivo
-    if next_node == 0:
-        # non ho ancora controllato se ho autonomia a sufficienza per arrivare al nodo di deposito
-        # Se sono fuori dal while perche next_node è == 0 ho ancora il current_node valido
-
-        current_city= dizionario_citta[int(current_node)]
-
-        distanza_deposito= current_city.distanza_deposito
-
-        if distanza_deposito > autonomia:
-
-            # Se non si ha abbastanza autonomia per tornare al deposito allora devo calcolare l'autonomia che mi rimane ad arrivare alla stazione di ricarica del nodo corrente                
-
-            autonomia -= current_city.distanza_stazione
-            distanza_percorsa += current_city.distanza_stazione
-
-            quadrante= current_city.get_quadrant()
-            stazione_ricarica= str(quadrante) + 'S'
-
-
-            return percorso, autonomia, distanza_percorsa, stazione_ricarica
-        
-        else: 
-            # Se tornati al deposito non si ha consumato tutta la benzina vuol dire che c'è uno spreco
-            # Oppure caso nel quale la distanza del deposito è pari all'autonomia rimasta
-
-            percorso.append(0)
-
-            autonomia -= distanza_deposito
-            distanza_percorsa += distanza_deposito
-
-            # Tornando '0S' indico che il tour è concluso e non c'è piu bisogno di invocare look_ahead
-            return percorso, autonomia, distanza_percorsa, '0S'
-
-    else:
-        # Siamo nel caso in cui non si è usciti dal while perchè il nodo successivo è il nodo di deposito 
-        # ma perchè l'autonomia che abbiamo non è sufficiente per permetterci una volta arrivati al next_node, di raggiungere la stazione di ricarica del next_node
-
-        current_city= dizionario_citta[int(current_node)]
-        distanza_stazione= current_city.distanza_stazione
-
-        autonomia -= distanza_stazione
-        distanza_percorsa += distanza_stazione
-
-        quadrante= current_city.get_quadrant()
-        stazione_ricarica= str(quadrante) + 'S'
-        
-        return percorso, autonomia, distanza_percorsa, stazione_ricarica
-
-
-
-
-def create_green_opt(christofides_graph_no_recharge, dizionario_stazioni, dizionario_citta, k):
-   # Devo partire dal deposito, la direzione scelta  è quella del collegamento più corto 
-    # autonomia= k
-    tempo_ricarica= 0
-    distanza_percorsa= 0
-    
-    percorso = []
-
-    current_node= 0
-    previous_node= 0
-    
-    # look_ahead mi dice quanta ricarica mi rimarrebbe se da current node fino a quando devo fermarmi per andare a ricarica se partissi con autonomia piena. Inoltre mi fornisce anche il sotto percorso percorribile
-    next_percorso, diff_autonomia, next_distanza_percorsa, stazione_ricarica= look_ahead(current_node, previous_node, k, christofides_graph_no_recharge, dizionario_stazioni, dizionario_citta)
-    print("---------fine look ahead ---------")
-    print("\n\npercorso: " + str(percorso))
-    print("next_percorso: " + str(next_percorso))
-    percorso= percorso + next_percorso
-
-    print("percorso: " + str(percorso))
-    print("next_distanza_percorsa: " + str(next_distanza_percorsa))
-    print("diff_autonomia: " + str(diff_autonomia))
-    print("stazione_ricarica: " + str(stazione_ricarica))
-
-
-
-    distanza_percorsa += next_distanza_percorsa
-
-    print("distanza_percorsa: " + str(distanza_percorsa))
-
-    # autonomia= k - diff_autonomia
-    tempo_ricarica += (k - diff_autonomia) * 0.25
-
-
-    # next_percorso è il percorso futuro da aggiungere, questo non ha la stazione in cui bisogna andare a ricaricare
-    # Dall'ultimo nodo prima di andare nella stazione devo tirare fuori il suo nodo futuro con cui è collegato ( in quanto usciti dalla stazione bisognerà andare verso quel nodo)
-    # e ho bisogno anche del nodo precedente (second_last_node) che mi serve per trovare appunto il nodo futuro (next_current_node) con cui la stazione si dovrà collegare 
-
-    last_node= percorso[-1]
-    print("last_node: " + str(last_node))
-    second_last_node= percorso[-2]
-    
-    percorso.append(stazione_ricarica)
-
-    last_node_dict= christofides_graph_no_recharge[int(last_node)]
-
-    linked_nodes= list(last_node_dict.keys())
-
-    for node in linked_nodes:
-        if node != second_last_node:
-            next_current_node= int(node)
-            next_distanza= last_node_dict[node]
-            next_dist= next_distanza[0]
-    
-    percorso.append(next_current_node)
-    distanza_percorsa += next_dist
-
-    previous_node= last_node
-    current_node= next_current_node
-
-    print("\nprevious_node: " + str(previous_node))
-    print("current_node: " + str(current_node)  + "\n\n")
-    offset= k - next_dist
-    
-
-    while stazione_ricarica != '0S':
-
-        next_percorso, diff_autonomia, next_distanza_percorsa, stazione_ricarica= look_ahead(current_node, previous_node, offset, christofides_graph_no_recharge, dizionario_stazioni, dizionario_citta)
-        print("\n---------fine look ahead ---------")
-        print("\n\npercorso: " + str(percorso))
-        print("next_percorso: " + str(next_percorso))
-        percorso= percorso + next_percorso
-
-
-
-        distanza_percorsa += next_distanza_percorsa
-
-        print("percorso: " + str(percorso))
-        print("next_distanza_percorsa: " + str(next_distanza_percorsa))
-        print("diff_autonomia: " + str(diff_autonomia))
-        print("stazione_ricarica: " + str(stazione_ricarica))
-
-
-        # autonomia= k - diff_autonomia
-        # Io next_dist l'ho già speso per arrivare a current_node quindi quell'energia li la devo avere per forza e devo averla quindi caricata
-        tempo_ricarica += next_dist * 0.25
-
-        # In più sommo l'energia che devo caricare in modo da avere non avere sprechi
-        tempo_ricarica += (offset - diff_autonomia) * 0.25
-
-        if stazione_ricarica != '0S':
-            last_node= percorso[-1]
-            print("last_node: " + str(last_node))
-            if 'S' in str(percorso[-2]): 
-                second_last_node= percorso[-3]
-            else:
-                second_last_node= percorso[-2]
-            percorso.append(stazione_ricarica)
-
-            last_node_dict= christofides_graph_no_recharge[int(last_node)]
-
-            linked_nodes= list(last_node_dict.keys())
-
-            for node in linked_nodes:
-                if node != second_last_node:
-                    next_current_node= int(node)
-                    next_distanza= last_node_dict[node]
-                    next_dist= next_distanza[0]
-            
-            if next_current_node != 0: 
-                
-                percorso.append(next_current_node)
-                distanza_percorsa += next_dist
-
-                previous_node= last_node
-                current_node= next_current_node
-
-                offset= k - next_dist
-            else:
-                break
-
-
-    # Dal while posso essere uscito per due ragioni, o perchè ho ricevuto un: stazione_ricarica == '0S' oppure perchè la stazione_ricarica ricevuta serve per avere ricarica necessaria per arrivare al nodo deposito
-    if stazione_ricarica != '0S':
-        # In questo caso significa che devo aggiungere 0 come nodo finale e aggiungere a distanza totale la distanza tra stazione_ricarica e 0
-        print("\n\ndentro '0S'")
-
-        percorso.append(0)
-
-        stazione= stazione_ricarica.replace('S','')
-        coordinate_stazione= dizionario_stazioni[int(stazione)]
-
-        distanza_percorsa += euclidean_distance(coordinate_stazione,[0,0])
-
-        tempo_ricarica += euclidean_distance(coordinate_stazione,[0,0]) * 0.25
-
-        print("\npercorso: " + str(percorso))
-        print("next_distanza_percorsa: " + str(next_distanza_percorsa)) 
-        print("distanza_percorsa: " + str(distanza_percorsa))
-
-    christofides_opt_graph= crea_dizionario_percorso(percorso,dizionario_citta,dizionario_stazioni)
-
-    tempo_totale= distanza_percorsa + tempo_ricarica
-
-    return christofides_opt_graph, distanza_percorsa, tempo_ricarica, percorso, tempo_totale
-
-
-
-
-
-
-
-
-
-
-"""def create_green_graph(christofides_graph_no_recharge, dizionario_stazioni, dizionario_citta, k):
-
-    # Devo partire dal deposito, la direzione scelta  è quella del collegamento più corto 
+    percorso=[0]
     autonomia= k
-    tempo_ricarica= 0
     distanza_percorsa= 0
-    
-    percorso = [0]
+    tempo_ricarica= 0
 
     current_node= 0
+    current_dict= christofides_graph_no_recharge[current_node]
 
+    visited_station= 0
+    last_node_flag= 0
 
-    # La scelta di andare nella stazione di ricarica è tale e quale a quella della nearest neighbour, se lo spostamento mi porterebbe in una citta e rimanessi con un'autonomia non sufficiente ad arrivare alla stazione di ricarica di quel quadrante
-    # allora prima di andare in quella città vado in una stazione di rifornimento e mi ricarico. Qui posso vedere quanto ricaricare, tale scelta la posso fare nella seguente maniera:
-    # Ipotizzo di fare una ricarica piena, proseguo nel mio tragitto e verifico quanta autonomia mi rimarrebbe nel momento in cui dovrò andare a fare una ricarica,
-    # La ricarica che quindi farò sarà pari a: Autonomia piena - Autonomia rimanente di quando sarò nella stazione di ricarica futura
-
-    # Devo scegliere come secondo nodo (per dare una direzione di percorrenza) il nodo più vicino
+    # Ora cerco il prossimo nodo
+    # Per dare un verso al grafo scelgo l'arco più corto
     min_dist= float("inf")   # qualsiasi numero è inferiore a floag("inf")  ( ma non superiore )
-    dict_nodo_dep= christofides_graph_no_recharge.get(int(current_node))
-    print("christofides_graph_no_recharge: " + str(christofides_graph_no_recharge))
-    linked_nodes= list(dict_nodo_dep.keys())
-
-    previous_node= current_node
+    linked_nodes= list(current_dict.keys())
 
     # Cerco il nodo più vicino al deposito
     for node in linked_nodes:
-        dist_node= dict_nodo_dep.get(int(node))
+        dist_node= current_dict.get(int(node))
         if dist_node[0] <= min_dist:
             min_dist = dist_node[0]
             current_node= node
 
-    autonomia -= min_dist
-    distanza_percorsa += min_dist
+
+    # avendo trovato il primo nodo, mi segno l'ultimo nodo del percorso
+    for node in linked_nodes:
+        if node != current_node:
+            last_node= int(node)
+
+    # posso aggiungere gia il nuovo nodo alla lista
 
     percorso.append(current_node)
 
+    # aggiorno contatori    
+    autonomia -= min_dist
+    distanza_percorsa += min_dist
+
     while current_node != 0:
+
+        #print("percorso: " + str(percorso))
+
+        # Cerco il nodo futuro
+
+        if last_node_flag == 1:
+            
+            current_dict= christofides_graph_no_recharge[current_node] #current_dict è anche l'ultimo nodo
+
+            next_node= 0
+            next_distance= current_dict[next_node]
+            next_dist= next_distance[0]
+
+        elif visited_station == 0 : # Se l'ultimo nodo visitato non è una stazione e non è l'ultimo nodo del percorso (e se siamo qui vuol dire che il nodo corrente non è l'ultimo)
+
+            # current_node= int(percorso[-1])
+            current_dict= christofides_graph_no_recharge[current_node]
+
+            linked_nodes= list(current_dict)
+            
+            # In linked nodes ci sono solo 2 nodi, uno è il precedente ed uno è il successivo, il precedente è gia in percorso, io ho bisogno del successivo
+            for node in linked_nodes: 
+                if node not in percorso:
+                    next_node= node
+                    next_distance= current_dict[node]
+                    next_dist= next_distance[0]
+
+        elif visited_station == 1:   # Se l'ultimo nodo visitato è una stazione
+
+            current_node= int(percorso[-2]) # nodo precedente alla stazione
+            current_dict= christofides_graph_no_recharge[current_node]
+
+            linked_nodes= list(current_dict)
+                        
+            for node in linked_nodes: 
+                if node not in percorso:
+                    next_node= node
+                    
+                    # Se l'ultimo nodo visitato è una stazione la prossima distanza sarà la distanza tra tale stazione e il next_node
+                    last_station= str(percorso[-1])
+                    stazione= int(last_station.replace('S',''))
+
+                    coordinate_stazione= dizionario_stazioni[stazione]
+
+                    next_city= dizionario_citta[int(next_node)]
+                    coordinate_next_node= next_city.coordinate
+
+                    next_dist= euclidean_distance(coordinate_stazione, coordinate_next_node)
+
+                    break  # possiamo subito uscire dal for perchè tanto ce ne è solo uno di nodo non nel percorso
+
+        # Devo separare due casi:
+        #  1) caso finale che devo confrontare l'autonomia futura con la distanza del nodo corrente dal deposito
+        #  2) caso in cui non si è alla fine dove devo confrontare l'autonomia futura che avrò nel next node se sarà sufficiente ad arrivare alla stazione del next_node dal next_node
         
-        dict_current_node= christofides_graph_no_recharge[current_node]
-        
-        # Vado a prendere il nodo successivo
-        linked_nodes= list(dict_current_node.keys())
+        # Caso 1)
+        if next_node == 0: 
+            current_city= dizionario_citta[int(current_node)]
+            distanza_deposito= current_city.distanza_deposito
 
-        for node in linked_nodes:
-            if node != previous_node:
-                next_node= node
+            if distanza_deposito > autonomia: # in questo caso prima di andare al deposito devo fermarmi ad una stazione di ricarica e ricaricare solo dell'autonomia necessaria per arrivare al deposito
+                distanza_stazione= current_city.distanza_stazione
 
-
-        # Una volta preso il nodo successivo controllo l'autonomia
-        # Se il nodo successivo è il nodo di deposito controllo se ho autonomia a sufficienza per arrivarci
-
-        if next_node == 0:
-            nodo_corrente= dizionario_citta[current_node]
-            distanza_deposito= nodo_corrente.distanza_deposito
-
-            if distanza_deposito > autonomia: # devo fermarmi prima alla stazione di ricarica e posso farlo perchè senno non sarei potuto arrivare a questo nodo
-                quadrante= nodo_corrente.get_quadrant()
-                nodo_stazione= quadrante + 'S'
-
-                distanza_stazione= nodo_corrente.distanza_stazione
-
-                # aggiorno i contatori
-                autonomia -= distanza_stazione
-                distanza_percorsa += distanza_stazione
+                # cerco la stazione della città corrente
+                quadrante= str(current_city.get_quadrant())
+                stazione_current_city= quadrante + 'S'
 
                 # aggiungo la stazione al percorso
-                percorso.append(nodo_stazione)
+                percorso.append(stazione_current_city)
 
-                # La ricarica la devo fare saggiamente, ovvero, sapendo che il prossimo nodo dopo la stazione è il deposito, posso ricaricare solamente dell'autonomia necessaria per arrivare al deposito
-                # ovvero ricarico di: distanza Stazione- deposito
-                coordinate_stazione= dizionario_stazioni[quadrante]
+                # aggiorno i contatori
+
+                autonomia -= distanza_stazione
+                distanza_percorsa += distanza_stazione
+                
+                # Ora devo trovare la distanza stazione-deposito
+
+                coordinate_stazione= dizionario_stazioni[int(quadrante)]
+                
                 distanza_stazione_deposito= euclidean_distance(coordinate_stazione,[0,0])
 
-                delta_ricarica= distanza_stazione_deposito - autonomia
-                tempo_ricarica += 0.25*delta_ricarica
+                # distanza_stazione_deposito è anche quanto devo caricare
 
-                autonomia= distanza_stazione_deposito
+                # autonomia= distanza_stazione_deposito
 
+                #print("\ntempo_ricarica prima della ricarica: " + str(tempo_ricarica))
+                #print("tempo per questa ricarica: " + str((distanza_stazione_deposito - autonomia) * 0.25))
+                
+                tempo_ricarica += (distanza_stazione_deposito - autonomia) * 0.25
 
-                # Dalla stazione poi devo andare al deposito
+                #print("tempo_ricarica dopo la ricarica: " + str(tempo_ricarica) + "\n")
 
-                autonomia -= distanza_stazione_deposito
                 distanza_percorsa += distanza_stazione_deposito
 
-                # aggiungo il deposito al percorso e setto la condizione di uscita dal loop
+                # mi sposto sul deposito 
                 percorso.append(next_node)
 
-                # setto la condizione di uscita dal while in quanto arrivati al deposito finisce il tour
+                # mettendo il current_node a 0 dovrei uscire dal while
                 current_node= next_node
-
-            else: # caso in cui la distanza del deposito rientri nell'autonomia, in questo caso non ho bisogno di andare nella stazione di ricarica
+                
+            else: # caso in cui ho autonomia a sufficienza per arrivare al deposito
                 
                 autonomia -= distanza_deposito
                 distanza_percorsa += distanza_deposito
 
-                # aggiungo gli ultimi 2 nodi del percorso e setto la condizione di uscita dal loop
-                percorso.append(current_node)
                 percorso.append(next_node)
-                
                 current_node= next_node
 
-        else: # Caso in cui il nodo successivo non sia il nodo di deposito"""
+        # Caso 2)
+        else:
+            next_city= dizionario_citta[int(next_node)]
+            distanza_stazione_next_node= next_city.distanza_stazione
+
+            autonomia_futura= autonomia - next_dist
+
+            if distanza_stazione_next_node > autonomia_futura:
+                # Da current_node devo andare in stazione_current_node e aggiungere la stazione al percorso
+
+                current_city= dizionario_citta[current_node]
+                distanza_stazione= current_city.distanza_stazione
+
+                quadrante= str(current_city.get_quadrant())
+                stazione_current_node= quadrante + 'S'
+
+                # aggiungo la stazione al percorso
+                percorso.append(stazione_current_node)
+
+                # aggiorno contatori
+                autonomia -= distanza_stazione
+                distanza_percorsa += distanza_stazione
+
+                # Devo ricaricare 
+                # delta_ricarica mi dice quanto ricaricare
+                delta_ricarica= k - autonomia
+
+                autonomia= k
+
+                #print("\ntempo_ricarica prima della ricarica: " + str(tempo_ricarica))
+                #print("tempo per questa ricarica: " + str(delta_ricarica * 0.25))
+
+                tempo_ricarica += 0.25 * delta_ricarica
+
+                #print("tempo_ricarica dopo la ricarica: " + str(tempo_ricarica))
+
+                # alzo il flag che mi indica che l'ultimo nodo visitato era una stazione
+                visited_station= 1
+            else:
+
+                # Se invece ho abbastanza ricarica proseguo il tour
+                percorso.append(next_node)
+
+                # aggiorno i contatori
+
+                autonomia -= next_dist
+                distanza_percorsa += next_dist
+
+                # se sono qui il current_node non può essere una stazione di ricarica
+                current_node= next_node
+
+                # qui devo fare il controllo se sono nell'ultimo nodo
+
+                if int(current_node) == last_node:
+                    # Se il nodo corrente è l'ultimo, al posto che fare il controllo per vedere se si riesce ad arrivare alla stazione del prossimo nodo , devo fare il controllo
+                    # per vedere se riesco ad arrivare al deposito
+                    last_node_flag= 1
+
+                # se il flag di stazione visitata era alzato, ora l'abbasso in quanto l'ultimo nodo visitato era un cliente
+                if visited_station == 1:
+                    visited_station = 0
 
 
+    tempo_totale= distanza_percorsa + tempo_ricarica
 
+    christofides_graph= crea_dizionario_percorso(percorso,dizionario_citta,dizionario_stazioni)
+
+    return christofides_graph, distanza_percorsa, tempo_ricarica, percorso, tempo_totale
 
 
 def minimum_weight_matching(MST, G, odd_vert):  # MST è una lista di triple, (v1 v2 distanza),  G è un dizionario di dizionari, odd_vert è una lista di vertici
@@ -1714,17 +1537,17 @@ def Christofides_Algorithm(dizionario_citta, dizionario_stazioni, Max_Axis, k):
 
     christofides_graph_no_recharge= create_christofides_graph(mst_graph,G,dizionario_citta, Max_Axis)
 
-    print("\n\n\n -------------------------------------------------------------------------------------------------")
-    print("\nchristofide_graph_no_recharge: " + str(christofides_graph_no_recharge))
-    print("\n\n\n -------------------------------------------------------------------------------------------------")
+    #print("\n\n\n -------------------------------------------------------------------------------------------------")
+    #print("\nchristofide_graph_no_recharge: " + str(christofides_graph_no_recharge))
+    #print("\n\n\n -------------------------------------------------------------------------------------------------")
 
     plt.draw_Christofides(christofides_graph_no_recharge, dizionario_citta, Max_Axis)
 
     # UNA VOLTA TROVATO IL CIRCUITO HAMILTONIANO BISOGNA MODIFICARE IL GRAFO CONSIDERANDO L'AUTONOMIA DELL'AUTO
 
-    #christofides_graph, distanza_percorsa, tempo_ricarica, percorso, tempo_totale= create_green_graph(christofides_graph_no_recharge, dizionario_stazioni, dizionario_citta, k)
+    christofides_graph, distanza_percorsa, tempo_ricarica, percorso, tempo_totale= create_green_graph(christofides_graph_no_recharge, dizionario_stazioni, dizionario_citta, k)
     
-    christofides_graph, distanza_percorsa, tempo_ricarica, percorso, tempo_totale= create_green_opt(christofides_graph_no_recharge, dizionario_stazioni, dizionario_citta, k)
+    #christofides_graph, distanza_percorsa, tempo_ricarica, percorso, tempo_totale= create_green_opt(christofides_graph_no_recharge, dizionario_stazioni, dizionario_citta, k)
     
     plt.draw_Christofides_green(christofides_graph, dizionario_citta, dizionario_stazioni, Max_Axis)
 
@@ -1807,3 +1630,9 @@ if __name__ == "__main__":
     print("distanza_percorso: " + str(distanza_percorsa))
     print("tempo_totale: " + str(tempo_totale))
     print("tempo_ricarica: " + str(tempo_ricarica))
+
+    print(" ------------------ Controllo soluzione ------------------------------------------------")
+    resAccettabilita= soluzione_accettabile(percorso, G, k, dizionario_citta, dizionario_stazioni)
+    costo= calcola_costo(G, k, dizionario_citta, dizionario_stazioni, percorso)
+    print("res: " + str(resAccettabilita))
+    print("costo: " + str(costo))

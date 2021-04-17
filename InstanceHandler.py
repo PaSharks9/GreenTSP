@@ -176,9 +176,6 @@ def leggi_istanza():
 
 
 
-
-
-
 # ---------------------------------------------------- Guida al recupero dei dati dei dizionari in Salva Risultati -------------------------------------------------------------------------------------------------
 #
 # In dizionario_SA_C (e reciproco NN) ho come chiavi il numero di esecuzione e come valore il dizionario rispettivo della soluzione di quell'esecuzione
@@ -437,6 +434,8 @@ def salva_risultati(dizionario_soluzioni, dizionario_dati):
 
             n_esecuzioni= list(dizionario_evoluzione.keys())
             
+
+
             f.write("\n Soluzioni Migliori: ")
             for esecuzione in n_esecuzioni:
                 dizionario_Evoluzione_Soluzioni_NN= dizionario_evoluzione[esecuzione]
@@ -447,13 +446,17 @@ def salva_risultati(dizionario_soluzioni, dizionario_dati):
                 for chiave in chiavi:
                     valori= dizionario_Evoluzione_Soluzioni_NN[chiave]
                     f.write("\n" + str(chiave) + ") ")
-                    f.write("\n Soluzione precedente: " + str(valori[0]))
-                    f.write("\n Costo Soluzione precedente: " + str(valori[1]))
-                    f.write("\n Soluzione migliore: " + str(valori[2]))
-                    f.write("\n Costo Soluzione migliore: " + str(valori[3]))
-                    f.write("\n Temperatura: " + str(valori[4]))
-                    f.write("\n Iterazione: " + str(valori[5]))
-                    f.write("\n archi_scelti: " + str(valori[6]))
+                    f.write("\n Soluzione migliore precedente: " + str(valori[0]))
+                    f.write("\n Costo Soluzione migliore precedente: " + str(valori[1]))
+                    f.write("\n -------------------------------------------------------")
+                    f.write("\n Soluzione Corrente: " + str(valori[4]))
+                    f.write("\n Costo soluzione corrente: " + str(valori[5]))
+                    f.write("\n archi_scelti: " + str(valori[8]))
+                    f.write("\n Nuova soluzione migliore: " + str(valori[2]))
+                    f.write("\n Costo nuova soluzione migliore: " + str(valori[3]))
+                    f.write("\n Temperatura: " + str(valori[6]))
+                    f.write("\n Iterazione: " + str(valori[7]))
+
                 
                 f.write("\n----------------------------------------------------------------------------")
         

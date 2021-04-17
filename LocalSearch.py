@@ -25,7 +25,11 @@ def scelta_nodi(Percorso):
             arco1= (index_nodo1,index_nodo1 + 1)
             arco2= (index_nodo2,index_nodo2 + 1)
 
-            if arco1[0] in arco2 or arco1[1] in arco2:
+            # Non posso selezionare 2 archi consecutivi
+            arco1_nodi= [ Percorso[arco1[0]], Percorso[arco1[1]] ]
+            arco2_nodi= [ Percorso[arco2[0]], Percorso[arco2[1]] ]
+            
+            if arco1_nodi[0] in arco2_nodi or arco1_nodi[1] in arco2_nodi:
                 index_nodo1= -1
                 index_nodo2= -1
             else:
@@ -220,62 +224,18 @@ def genera_coppie_intorno(Percorso, lista_archi):
     return coppie_intorno
 
 
-
-if __name__ == "__main__":
-    k= 56
-    dizionario_stazioni = {1: [10, 10], 2: [10, -10], 3: [-10, -10], 4: [-10, 10]}
-
-    G={ 
-        0: {1: 21, 2: 13, 3: 11, 4: 13, 5: 20, 6: 13, 7: 20, 8: 18, 9: 19},
-        1: {0: 21, 2: 34, 3: 32, 4: 22, 5: 8, 6: 9, 7: 4, 8: 26, 9: 37},
-        2: {0: 13, 1: 34, 3: 2, 4: 18, 5: 31, 6: 26, 7: 33, 8: 19, 9: 20},
-        3: {0: 11, 1: 32, 2: 2, 4: 16, 5: 29, 6: 24, 7: 31, 8: 18, 9: 20},
-        4: {0: 13, 1: 22, 2: 18, 3: 16, 5: 16, 6: 19, 7: 24, 8: 5, 9: 32},
-        5: {0: 20, 1: 8, 2: 31, 3: 29, 4: 16, 6: 12, 7: 11, 8: 19, 9: 38},
-        6: {0: 13, 1: 9, 2: 26, 3: 24, 4: 19, 5: 12, 7: 7, 8: 24, 9: 28},
-        7: {0: 20, 1: 4, 2: 33, 3: 31, 4: 24, 5: 11, 6: 7, 8: 28, 9: 34},
-        8: {0: 18, 1: 26, 2: 19, 3: 18, 4: 5, 5: 19, 6: 24, 7: 28, 9: 36},
-        9: {0: 19, 1: 37, 2: 20, 3: 20, 4: 32, 5: 38, 6: 28, 7: 34, 8: 36}
-    }
-         
-    lista_citta=[
-            [10, -19],
-            [-10, 9],
-            [-9, 7],
-            [-10, -9],
-            [2, -20],
-            [9, -10],
-            [13, -16],
-            [-15, -10],
-            [8, 18]
-    ] 
-                
-    i = 1
-    dizionario_citta= {}
-    for element in lista_citta: 
-        cliente= Cliente(element[0],element[1],dizionario_stazioni,i)
-        dizionario_citta[i]= cliente
-        i += 1
-
-    Percorso= [0, 3, 2, 8, 4, '3S', 5, 1, 7, '2S', 6, 9, 0]
-    
-    print("soluzione_accettabile: " + str(soluzione_accettabile(Percorso, G, k , dizionario_citta, dizionario_stazioni)))
-    
-    tempo_tot_Percorso,_= calcola_costo(G, k, dizionario_citta, dizionario_stazioni,Percorso)
-    
-    print("costo: " + str(tempo_tot_Percorso))
-
+def local_search_2_otp():
     # -------------------------------------------------------------------------------------------------
-    tour= Percorso
+    tour= percorso
     tempo_tot= tempo_tot_Percorso
     # Sia genera_archi che genera_coppie_intorno ritornano indici perchè two_opt lavora sugli indici
-    lista_archi= genera_archi(Percorso)
-    coppie_intorno= genera_coppie_intorno(Percorso, lista_archi)
+    lista_archi= genera_archi(percorso)
+    coppie_intorno= genera_coppie_intorno(percorso, lista_archi)
     print("coppie_intorno: " + str(coppie_intorno))
-    i= 0
+    #i= 0
     dizionario_intorni= {}
     for coppia in coppie_intorno:
-        nuovo_percorso= two_opt1(Percorso,dizionario_citta,dizionario_stazioni,coppia)
+        nuovo_percorso= two_opt1(percorso,dizionario_citta,dizionario_stazioni,coppia)
 
         if soluzione_accettabile(nuovo_percorso,G,k,dizionario_citta,dizionario_stazioni):
             tempo_tot_nuovo_percorso,_=  calcola_costo(G, k, dizionario_citta, dizionario_stazioni, nuovo_percorso)
@@ -291,10 +251,64 @@ if __name__ == "__main__":
                     
                 dizionario_intorni[tuple(chiave)]= [tour, tempo_tot]
     
-    print("S0: " + str(Percorso))
+    print("S0: " + str(percorso))
     print("tempo_tot_percorso: " + str(tempo_tot_Percorso))
 
     print("dizionario_intorni: " + str(dizionario_intorni))
 
     print("ottimo_locale: " + str(tour))
     print("costo_ottimo_locale: " + str(tempo_tot))  
+
+
+if __name__ == "__main__":
+    k= 56
+    dizionario_stazioni = {1: [10, 10], 2: [10, -10], 3: [-10, -10], 4: [-10, 10]}
+
+    lista_citta=[
+                    [10, -19],
+                    [-10, 9],
+                    [-9, 7],
+                    [-10, -9],
+                    [2, -20],
+                    [9, -10],
+                    [13, -16],
+                    [-15, -10],
+                    [8, 18]
+    ]
+
+    G={ 
+        0: {1: 21, 2: 13, 3: 11, 4: 13, 5: 20, 6: 13, 7: 20, 8: 18, 9: 19},
+        1: {0: 21, 2: 34, 3: 32, 4: 22, 5: 8, 6: 9, 7: 4, 8: 26, 9: 37},
+        2: {0: 13, 1: 34, 3: 2, 4: 18, 5: 31, 6: 26, 7: 33, 8: 19, 9: 20},
+        3: {0: 11, 1: 32, 2: 2, 4: 16, 5: 29, 6: 24, 7: 31, 8: 18, 9: 20},
+        4: {0: 13, 1: 22, 2: 18, 3: 16, 5: 16, 6: 19, 7: 24, 8: 5, 9: 32},
+        5: {0: 20, 1: 8, 2: 31, 3: 29, 4: 16, 6: 12, 7: 11, 8: 19, 9: 38},
+        6: {0: 13, 1: 9, 2: 26, 3: 24, 4: 19, 5: 12, 7: 7, 8: 24, 9: 28},
+        7: {0: 20, 1: 4, 2: 33, 3: 31, 4: 24, 5: 11, 6: 7, 8: 28, 9: 34},
+        8: {0: 18, 1: 26, 2: 19, 3: 18, 4: 5, 5: 19, 6: 24, 7: 28, 9: 36},
+        9: {0: 19, 1: 37, 2: 20, 3: 20, 4: 32, 5: 38, 6: 28, 7: 34, 8: 36}
+    }
+
+    percorso= [0, 4, 8, 2, 3, '4S', 9, '1S', 5, 1, 7, 6, '2S', 0]
+                
+    i = 1
+    dizionario_citta= {}
+    for element in lista_citta: 
+        cliente= Cliente(element[0],element[1],dizionario_stazioni,i)
+        dizionario_citta[i]= cliente
+        i += 1
+
+    
+    print("soluzione_accettabile: " + str(soluzione_accettabile(percorso, G, k , dizionario_citta, dizionario_stazioni)))
+    
+    tempo_tot_Percorso,_= calcola_costo(G, k, dizionario_citta, dizionario_stazioni,percorso)
+    
+    print("costo: " + str(tempo_tot_Percorso))
+
+    print("percorso: " + str(percorso) + "\n")
+
+    for i in range(0,10):
+        archi_scelti, new_percorso= two_opt(percorso, dizionario_citta, dizionario_stazioni)
+
+        print("\narchi_scelti: " + str(archi_scelti))
+        print("new_percorso: " + str(new_percorso))

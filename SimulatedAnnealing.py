@@ -70,6 +70,9 @@ def simulated_annealing(dizionario_soluzione, dizionario_citta, dizionario_stazi
                 distanza_percorsa_precedente= distanza_percorsa_soluzione_corrente"""
 
                 # La nuova soluzione trovata diventa quella corrente
+                soluzione_precedente= soluzione_corrente
+                costo_soluzione_precedente= costo_soluzione_corrente
+
                 soluzione_corrente= new_solution
                 costo_soluzione_corrente= costo_new_solution
                 distanza_percorsa_soluzione_corrente= distanza_percorsa_new_sol
@@ -80,21 +83,23 @@ def simulated_annealing(dizionario_soluzione, dizionario_citta, dizionario_stazi
 
                 risultato_correttezza= soluzione_accettabile(soluzione_corrente, G, k, dizionario_citta, dizionario_stazioni)
                 
-                if risultato_correttezza and costo_soluzione_corrente <= costo_soluzione_migliore :
+                if risultato_correttezza and costo_soluzione_corrente < costo_soluzione_migliore :
                     
                     # In archi_scelti ho gli indici, ora tiro fuori i nodi relativi, per tenere traccia di quali archi scelti hanno portato al miglioramento, mi serve per controllare il corretto funzionamento
-                    arco1= [soluzione_corrente[archi_scelti[0][0]], soluzione_corrente[archi_scelti[0][1]]]
-                    arco2= [soluzione_corrente[archi_scelti[1][0]], soluzione_corrente[archi_scelti[1][1]]]
+                    arco1= [soluzione_precedente[archi_scelti[0][0]], soluzione_precedente[archi_scelti[0][1]]]
+                    arco2= [soluzione_precedente[archi_scelti[1][0]], soluzione_precedente[archi_scelti[1][1]]]
+                    
                     archi_scelti= [arco1,arco2]
                     print("iteration:" + str(iteration))
                     print("Temperature: " + str(Temperature))
-                    print("soluzione_corrente: " + str(soluzione_corrente))
+                    print("soluzione_precedente:  " + str(soluzione_precedente))
+                    print("nuova_soluzione_trovata: " + str(soluzione_corrente))
                     print("soluzione_migliore: " + str(soluzione_migliore))
                     print("Archi_scelti: " + str(archi_scelti))
-                    #time.sleep(10)
+                    #time.sleep(60)
                     j +=1
                     
-                    dizionario_sol_migliori[j]= [soluzione_migliore, costo_soluzione_migliore, soluzione_corrente, costo_soluzione_corrente, Temperature, iteration, archi_scelti]
+                    dizionario_sol_migliori[j]= [soluzione_migliore, costo_soluzione_migliore, soluzione_corrente, costo_soluzione_corrente, soluzione_precedente, costo_soluzione_precedente, Temperature, iteration, archi_scelti]
 
                     soluzione_migliore= soluzione_corrente
                     costo_soluzione_migliore= costo_soluzione_corrente
@@ -174,16 +179,16 @@ if __name__ == "__main__":
                         }
 
     lista_citta=[
-        [10, -19],
-        [-10, 9],
-        [-9, 7],
-        [-10, -9],
-        [2, -20],
-        [9, -10],
-        [13, -16],
-        [-15, -10],
-        [8, 18]
-            ] 
+            [10, -19],
+            [-10, 9],
+            [-9, 7],
+            [-10, -9],
+            [2, -20],
+            [9, -10],
+            [13, -16],
+            [-15, -10],
+            [8, 18]
+    ]
 
     G={ 
         0: {1: 21, 2: 13, 3: 11, 4: 13, 5: 20, 6: 13, 7: 20, 8: 18, 9: 19},
@@ -198,8 +203,7 @@ if __name__ == "__main__":
         9: {0: 19, 1: 37, 2: 20, 3: 20, 4: 32, 5: 38, 6: 28, 7: 34, 8: 36}
       }
 
-    percorso= [0, 6, 7, 1, 5, 8, '3S', 4, 3, 2, 9, '1S', 0]
-
+    percorso= [0, 9, 6, '2S', 7, 1, 5, 4, '3S', 8, 3, 2, 0]
 
     i = 1
     dizionario_citta= {}
@@ -216,18 +220,3 @@ if __name__ == "__main__":
     print("res: " + str(resAccettabilita))
     print("costo: " + str(costo))
 
-
-
-    # old: distanza_percorso: 122
-    #      tempo_totale: 144.5   
-    #      tempo_ricarica: 22.5  
-
-
-    # new: distanza_percorso: 111
-    #      tempo_totale: 141.25
-    #      tempo_ricarica: 30.25
-
-
-    # check: distanza_percorso: 117
-    #        tempo_totale: 132.25
-    #        tempo_ricarica: 15.25
