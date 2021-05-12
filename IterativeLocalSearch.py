@@ -202,8 +202,8 @@ def put_recharge_station(percorso,k,dizionario_citta,dizionario_stazioni):
         if new_percorso[i] == 0:
             coordinate1= [0,0]
         elif 'S' in str(new_percorso[i]):
-            stazione= int(new_percorso[i].replace('S',''))
-            coordinate1= dizionario_stazioni[stazione]
+            stazione= new_percorso[i].replace('S','')
+            coordinate1= dizionario_stazioni[int(stazione)]
         else:
             citta1= dizionario_citta[new_percorso[i]]
             coordinate1= citta1.coordinate
@@ -334,6 +334,13 @@ def perturbazione(percorso, G, k, dizionario_citta, dizionario_stazioni):
     id_cliente= new_percorso[indice_nuova_stazione]
     cliente= dizionario_citta[int(id_cliente)]
     quadrante_cliente= cliente.get_quadrant()
+    if quadrante_cliente == None:
+        print("\ndizionario_citta: " + str(dizionario_citta))
+        print("indice_nuova_stazione: " + str(indice_nuova_stazione))
+        print("id_cliente: " + str(id_cliente))
+        print("cliente: " + str(cliente))
+        print("quadrante_cliente: " + str(quadrante_cliente))
+        
     new_station= str(quadrante_cliente) + 'S'
 
     # aggiungo la nuova stazione al sottopercorso in modo da poter calcolare la giusta distanza da percorrere nel sotto_percorso

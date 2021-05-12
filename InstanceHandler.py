@@ -193,8 +193,8 @@ def leggi_istanza():
 # dizionario_soluzioni: -Costruttive --> dizionario_Costruttive: -NN --> dizionario_Nearest_Neighbour(chiavi elencate sotto)
 #                                                                -C --> dizionario_Christofides (chiavi elencate sotto)              
 #                        
-#                       -Meta Euristiche --> dizionario_MetaEuristiche: -SA --> dizionario_SA:   -NN -->   dizionario_SA_NN  -Esecuzione --> [dizionario_SA_NN_Esecuzione (chiavi elencate sotto), dizionario_Evoluzione_Soluzioni_NN]
-#                                                                                                -C  -->   dizionario_SA_C   -Esecuzione --> [dizionario_SA_C_Esecuzione  (chiavi elencate sotto), dizionario_Evoluzione_Soluzioni_C]
+#                       -Meta Euristiche --> dizionario_MetaEuristiche: -SA --> dizionario_SA:   -chiamata-->  dizionario_SA_Chiamata: -NN -->   dizionario_SA_NN  -Esecuzione --> [dizionario_SA_NN_Esecuzione (chiavi elencate sotto), dizionario_Evoluzione_Soluzioni_NN]
+#                                                                                                                                      -C  -->   dizionario_SA_C   -Esecuzione --> [dizionario_SA_C_Esecuzione  (chiavi elencate sotto), dizionario_Evoluzione_Soluzioni_C]
 #
 #                                                                       -ILS --> dizionario_ILS: -NN -->   dizionario_ILS_C   -percorso
 #                                                                                                                             -durata_tot
@@ -228,11 +228,11 @@ def leggi_istanza():
 #                                                  - clienti
 #                                                  - Dizionario distanze
 #                   
-#                  - SA --> dizionario_param_SA:   -Parametri --> dizionario_parametri: - NCitta
-#                                                                                       - Iterazioni
-#                                                                                       - Temperatura
-#                                                                                       - Tfrozen
-#                                                                                       - Fattore Decrescita
+#                  - SA --> dizionario_parametri_SA:  -chiamata --> dizionario_param_SA: -Parametri --> dizionario_parametri:   - NCitta
+#                                                                                                                               - Iterazioni
+#                                                                                                                               - Temperatura
+#                                                                                                                               - Tfrozen
+#                                                                                                                               - Fattore Decrescita
 #                  - ILS --> dizionario_param_ILS: {} ( per ora ancora vuoto )
 #
 #
@@ -258,19 +258,6 @@ def salva_risultati(dizionario_soluzioni, dizionario_dati):
     k= dizionario_istanza['Autonomia']
     G= dizionario_istanza['Dizionario Distanze']
 
-    # Recupero i parametri del SA
-    dizionario_parametri_SA= dizionario_dati['SA']
-
-    # Se sono presenti parametri del SA procedo allo scapsulamento dei parametri , altrimenti vado avanti 
-    if len(dizionario_parametri_SA) > 0:
-        flagSA = 1
-
-        N_CITIES= dizionario_parametri_SA['NCitta']
-        Iterazioni= dizionario_parametri_SA['Iterazioni']
-        Temperatura= dizionario_parametri_SA['Temperatura']
-        Tfrozen= dizionario_parametri_SA['Tfrozen']
-        decreaseT= dizionario_parametri_SA['Fattore Decrescita']
-    
     # Futura implementazione
     # Recupero i parametri dell' ILS
     """dizionario_parametri_ILS= dizionario_dati['ILS']
@@ -363,8 +350,20 @@ def salva_risultati(dizionario_soluzioni, dizionario_dati):
     dizionario_Nearest_Neighbour= dizionario_Costruttive['NN']
     dizionario_Christofides= dizionario_Costruttive['C']
 
+
+    # Recupero i parametri del SA
+
+    dizionario_parametri_SA= dizionario_dati['SA']
+
+
+    n_chiamate= list(dizionario_parametri_SA.keys())
+    # Se sono presenti parametri del SA procedo allo scapsulamento dei parametri , altrimenti vado avanti 
+    if len(n_chiamate) > 0:
+        flagSA = 1
+
     # Salvo i risultati di Euristiche Costruttive e Meta Euristiche (nello stesso file)
     if flagSA == 1:
+        
         # Vuol dire che è stato eseguito l'algoritmo di SA e ne recupero il dizionario
         dizionario_SA= dizionario_MetaEuristiche['SA']
 
@@ -373,150 +372,167 @@ def salva_risultati(dizionario_soluzioni, dizionario_dati):
         
         # Recupero i dati delle soluzioni NN e C del SA se presenti
 
-        dizionario_SA_NN= dizionario_SA['NN']
-        dizionario_SA_C= dizionario_SA['C']
+        for chiamata in n_chiamate:
+            # Recupero i parametri relativi alla singola chiamata
+            dizionario_param_SA= dizionario_parametri_SA[chiamata]
 
-        if len(dizionario_SA_NN) > 0:
-            flagSA_NN= 1
+            N_CITIES= dizionario_param_SA['NCitta']
+            Iterazioni= dizionario_param_SA['Iterazioni']
+            Temperatura= dizionario_param_SA['Temperatura']
+            Tfrozen= dizionario_param_SA['Tfrozen']
+            decreaseT= dizionario_param_SA['Fattore Decrescita']
 
-        if len(dizionario_SA_C) > 0:
-            flagSA_C= 1
 
-        #------------------------------------------ RISULTATI_ALGORITMI.TXT ---------------------------------------------------------
+            # Recupero i dati relativi alla singola chiamata
+            dizionario_SA_Chiamata= dizionario_SA[chiamata]
 
-        name_file= path_dir + "/risultati_SA.txt"
-        f= open(name_file, "w+")
+            dizionario_SA_NN= dizionario_SA_Chiamata['NN']
+            dizionario_SA_C= dizionario_SA_Chiamata['C']
 
-        f.write("------ Algoritmo Costruttivo Greedy Nearest_Neighbour ------")
-        f.write("\nPercorso: " + str(dizionario_Nearest_Neighbour['percorso']))
-        f.write("\nDistanza: " + str(dizionario_Nearest_Neighbour['distanza']))
-        f.write("\nDurata Tour: " + str(dizionario_Nearest_Neighbour['tempo_tot']))
-        f.write("\nTempo Ricarica: " + str(dizionario_Nearest_Neighbour['tempo_ricarica']))
-        f.write("\nTempo Esecuzione Algoritmo: " + str(dizionario_Nearest_Neighbour['tempo_esec']))
 
-        f.write("\n\n------ Algoritmo Costruttivo non Greedy Christofides ------")
-        f.write("\nPercorso: " + str(dizionario_Christofides['percorso']))
-        f.write("\nDistanza: " + str(dizionario_Christofides['distanza']))
-        f.write("\nDurata Tour: " + str(dizionario_Christofides['tempo_tot']))
-        f.write("\nTempo Ricarica: " + str(dizionario_Christofides['tempo_ricarica']))
-        f.write("\nTempo Esecuzione Algoritmo: " + str(dizionario_Christofides['tempo_esec']))
+            if len(dizionario_SA_NN) > 0:
+                flagSA_NN= 1
 
-        f.write("\n\n\n----------------------------------------------------------------------------------- SIMULATED ANNEALING --------------------------------------------------------------------------------------")
-        
-        f.write("\n\nNCitta: " + str(N_CITIES))
-        f.write("\tIterazioni: " + str(Iterazioni))
-        f.write("\tTemperatura: " + str(Temperatura))
-        f.write("\tTFrozen: " + str(Tfrozen))
-        f.write("\tFattore Decrescita: " +str(decreaseT))
-        f.write("\n")
-        f.write("-"*191)
+            if len(dizionario_SA_C) > 0:
+                flagSA_C= 1
 
-        if flagSA_NN == 1:  # Stampa Soluzioni SA con Nearest Neighbour
-            n_esecuzioni= list(dizionario_SA_NN.keys())
+
+
+            #------------------------------------------ RISULTATI_ALGORITMI.TXT ---------------------------------------------------------
+            print("chiamata: " + str(chiamata))
+            name_file= path_dir + "/risultati_SA_" + str(chiamata) + ".txt"
+            f= open(name_file, "w+")
+
+            f.write("------ Algoritmo Costruttivo Greedy Nearest_Neighbour ------")
+            f.write("\nPercorso: " + str(dizionario_Nearest_Neighbour['percorso']))
+            f.write("\nDistanza: " + str(dizionario_Nearest_Neighbour['distanza']))
+            f.write("\nDurata Tour: " + str(dizionario_Nearest_Neighbour['tempo_tot']))
+            f.write("\nTempo Ricarica: " + str(dizionario_Nearest_Neighbour['tempo_ricarica']))
+            f.write("\nTempo Esecuzione Algoritmo: " + str(dizionario_Nearest_Neighbour['tempo_esec']))
+
+            f.write("\n\n------ Algoritmo Costruttivo non Greedy Christofides ------")
+            f.write("\nPercorso: " + str(dizionario_Christofides['percorso']))
+            f.write("\nDistanza: " + str(dizionario_Christofides['distanza']))
+            f.write("\nDurata Tour: " + str(dizionario_Christofides['tempo_tot']))
+            f.write("\nTempo Ricarica: " + str(dizionario_Christofides['tempo_ricarica']))
+            f.write("\nTempo Esecuzione Algoritmo: " + str(dizionario_Christofides['tempo_esec']))
+
+            f.write("\n\n\n----------------------------------------------------------------------------------- SIMULATED ANNEALING --------------------------------------------------------------------------------------")
+            
+            f.write("\n\nNCitta: " + str(N_CITIES))
+            f.write("\tIterazioni: " + str(Iterazioni))
+            f.write("\tTemperatura: " + str(Temperatura))
+            f.write("\tTFrozen: " + str(Tfrozen))
+            f.write("\tFattore Decrescita: " +str(decreaseT))
             f.write("\n")
-            f.write("=" *191)
-            f.write("\n\n\t\t\tSoluzione Iniziale: Nearest Neighbour")
-            f.write("\n\n")
-            f.write("=" *191)
+            f.write("-"*191)
 
-            dizionario_evoluzione={}
+            if flagSA_NN == 1:  # Stampa Soluzioni SA con Nearest Neighbour
+                n_esecuzioni= list(dizionario_SA_NN.keys())
+                f.write("\n")
+                f.write("=" *191)
+                f.write("\n\n\t\t\tSoluzione Iniziale: Nearest Neighbour")
+                f.write("\n\n")
+                f.write("=" *191)
 
-            for esecuzione in n_esecuzioni:
-                if esecuzione  != 'Tempo Esecuzione Totale':
-                    dizionariNN = dizionario_SA_NN[int(esecuzione)]
-                    dizionario_SA_NN_Esecuzione= dizionariNN[0]
+                dizionario_evoluzione={}
 
-                    dizionario_evoluzione[esecuzione]= dizionariNN[1]
+                for esecuzione in n_esecuzioni:
+                    if esecuzione  != 'Tempo Esecuzione Totale':
+                        dizionariNN = dizionario_SA_NN[int(esecuzione)]
+                        dizionario_SA_NN_Esecuzione= dizionariNN[0]
 
-                    f.write("\n--------------------------------------------------")
-                    f.write("\n\nEsecuzione n: " + str(esecuzione))
-                    f.write("\nPercorso: " + str(dizionario_SA_NN_Esecuzione['Percorso']))
-                    f.write("\nDistanza: " + str(dizionario_SA_NN_Esecuzione['Distanza Totale']))
-                    f.write("\nDurata Tour: " + str(dizionario_SA_NN_Esecuzione['Tempo Totale']))
-                    f.write("\nTempo Ricarica: " + str(dizionario_SA_NN_Esecuzione['Tempo Ricarica']))
-                    f.write("\nTempo Esecuzione: " + str(dizionario_SA_NN_Esecuzione['Tempo Esecuzione']))
-            
-            f.write("\n\nTempo Esecuzione Totale: " + str(dizionario_SA_NN['Tempo Esecuzione Totale']))
+                        dizionario_evoluzione[esecuzione]= dizionariNN[1]
 
-            n_esecuzioni= list(dizionario_evoluzione.keys())
-            
-
-
-            f.write("\n Soluzioni Migliori: ")
-            for esecuzione in n_esecuzioni:
-                dizionario_Evoluzione_Soluzioni_NN= dizionario_evoluzione[esecuzione]
-                f.write("\n----------------------------------------------------------------------------")
-                f.write("\nEsecuzione: " + str(esecuzione) + "\n")
-
-                chiavi= list(dizionario_Evoluzione_Soluzioni_NN.keys())
-                for chiave in chiavi:
-                    valori= dizionario_Evoluzione_Soluzioni_NN[chiave]
-                    f.write("\n" + str(chiave) + ") ")
-                    f.write("\n Soluzione migliore precedente: " + str(valori[0]))
-                    f.write("\n Costo Soluzione migliore precedente: " + str(valori[1]))
-                    f.write("\n -------------------------------------------------------")
-                    f.write("\n Soluzione Corrente: " + str(valori[4]))
-                    f.write("\n Costo soluzione corrente: " + str(valori[5]))
-                    f.write("\n archi_scelti: " + str(valori[8]))
-                    f.write("\n Nuova soluzione migliore: " + str(valori[2]))
-                    f.write("\n Costo nuova soluzione migliore: " + str(valori[3]))
-                    f.write("\n Temperatura: " + str(valori[6]))
-                    f.write("\n Iterazione: " + str(valori[7]))
-
+                        f.write("\n--------------------------------------------------")
+                        f.write("\n\nEsecuzione n: " + str(esecuzione))
+                        f.write("\nPercorso: " + str(dizionario_SA_NN_Esecuzione['Percorso']))
+                        f.write("\nDistanza: " + str(dizionario_SA_NN_Esecuzione['Distanza Totale']))
+                        f.write("\nDurata Tour: " + str(dizionario_SA_NN_Esecuzione['Tempo Totale']))
+                        f.write("\nTempo Ricarica: " + str(dizionario_SA_NN_Esecuzione['Tempo Ricarica']))
+                        f.write("\nTempo Esecuzione: " + str(dizionario_SA_NN_Esecuzione['Tempo Esecuzione']))
                 
-                f.write("\n----------------------------------------------------------------------------")
-        
-        if flagSA_C == 1: # Stampa Soluzioni SA con Christofides
-            n_esecuzioni= list(dizionario_SA_C.keys())
-            f.write("\n")
-            f.write("=" *191)
-            f.write("\n\n\t\t\tSoluzione Iniziale: Christofides")
-            f.write("\n\n")
-            f.write("=" *191)
+                f.write("\n\nTempo Esecuzione Totale: " + str(dizionario_SA_NN['Tempo Esecuzione Totale']))
 
-            dizionario_evoluzione={}
-
-            for esecuzione in n_esecuzioni:
-                if esecuzione  != 'Tempo Esecuzione Totale':
-                    dizionariC= dizionario_SA_C[int(esecuzione)]
-                    dizionario_SA_C_Esecuzione= dizionariC[0]
-
-                    dizionario_evoluzione[esecuzione]= dizionariC[1]
-
-                    f.write("\n--------------------------------------------------")
-                    f.write("\n\nEsecuzione n: " + str(esecuzione))
-                    f.write("\nPercorso: " + str(dizionario_SA_C_Esecuzione['Percorso']))
-                    f.write("\nDistanza: " + str(dizionario_SA_C_Esecuzione['Distanza Totale']))
-                    f.write("\nDurata Tour: " + str(dizionario_SA_C_Esecuzione['Tempo Totale']))
-                    f.write("\nTempo Ricarica: " + str(dizionario_SA_C_Esecuzione['Tempo Ricarica']))
-                    f.write("\nTempo Esecuzione: " + str(dizionario_SA_C_Esecuzione['Tempo Esecuzione']))
-
-            f.write("\n\nTempo Esecuzione Totale: " + str(dizionario_SA_C['Tempo Esecuzione Totale']))
-
-
-            n_esecuzioni= list(dizionario_evoluzione.keys())
-            
-            f.write("\n Soluzioni Migliori: ")
-            for esecuzione in n_esecuzioni:
-                dizionario_Evoluzione_Soluzioni_C= dizionario_evoluzione[esecuzione]
+                n_esecuzioni= list(dizionario_evoluzione.keys())
                 
-                f.write("\n----------------------------------------------------------------------------")
-                f.write("\nEsecuzione: " + str(esecuzione) + "\n")
 
-                chiavi= list(dizionario_Evoluzione_Soluzioni_C.keys())
-                for chiave in chiavi:
-                    valori= dizionario_Evoluzione_Soluzioni_C[chiave]
-                    f.write("\n" + str(chiave) + ") ")
-                    f.write("\n Soluzione precedente: " + str(valori[0]))
-                    f.write("\n Costo Soluzione precedente: " + str(valori[1]))
-                    f.write("\n Soluzione migliore: " + str(valori[2]))
-                    f.write("\n Costo Soluzione migliore: " + str(valori[3]))
-                    f.write("\n Temperatura: " + str(valori[4]))
-                    f.write("\n Iterazione: " + str(valori[5]))
-                    f.write("\n archi_scelti: " + str(valori[6]))
-                f.write("\n----------------------------------------------------------------------------")
 
-        f.close()
+                f.write("\n Soluzioni Migliori: ")
+                for esecuzione in n_esecuzioni:
+                    dizionario_Evoluzione_Soluzioni_NN= dizionario_evoluzione[esecuzione]
+                    f.write("\n----------------------------------------------------------------------------")
+                    f.write("\nEsecuzione: " + str(esecuzione) + "\n")
+
+                    chiavi= list(dizionario_Evoluzione_Soluzioni_NN.keys())
+                    for chiave in chiavi:
+                        valori= dizionario_Evoluzione_Soluzioni_NN[chiave]
+                        f.write("\n" + str(chiave) + ") ")
+                        f.write("\n Soluzione migliore precedente: " + str(valori[0]))
+                        f.write("\n Costo Soluzione migliore precedente: " + str(valori[1]))
+                        f.write("\n -------------------------------------------------------")
+                        f.write("\n Soluzione Corrente: " + str(valori[4]))
+                        f.write("\n Costo soluzione corrente: " + str(valori[5]))
+                        f.write("\n archi_scelti: " + str(valori[8]))
+                        f.write("\n Nuova soluzione migliore: " + str(valori[2]))
+                        f.write("\n Costo nuova soluzione migliore: " + str(valori[3]))
+                        f.write("\n Temperatura: " + str(valori[6]))
+                        f.write("\n Iterazione: " + str(valori[7]))
+
+                    
+                    f.write("\n----------------------------------------------------------------------------")
+            
+            if flagSA_C == 1: # Stampa Soluzioni SA con Christofides
+                n_esecuzioni= list(dizionario_SA_C.keys())
+                f.write("\n")
+                f.write("=" *191)
+                f.write("\n\n\t\t\tSoluzione Iniziale: Christofides")
+                f.write("\n\n")
+                f.write("=" *191)
+
+                dizionario_evoluzione={}
+
+                for esecuzione in n_esecuzioni:
+                    if esecuzione  != 'Tempo Esecuzione Totale':
+                        dizionariC= dizionario_SA_C[int(esecuzione)]
+                        dizionario_SA_C_Esecuzione= dizionariC[0]
+
+                        dizionario_evoluzione[esecuzione]= dizionariC[1]
+
+                        f.write("\n--------------------------------------------------")
+                        f.write("\n\nEsecuzione n: " + str(esecuzione))
+                        f.write("\nPercorso: " + str(dizionario_SA_C_Esecuzione['Percorso']))
+                        f.write("\nDistanza: " + str(dizionario_SA_C_Esecuzione['Distanza Totale']))
+                        f.write("\nDurata Tour: " + str(dizionario_SA_C_Esecuzione['Tempo Totale']))
+                        f.write("\nTempo Ricarica: " + str(dizionario_SA_C_Esecuzione['Tempo Ricarica']))
+                        f.write("\nTempo Esecuzione: " + str(dizionario_SA_C_Esecuzione['Tempo Esecuzione']))
+
+                f.write("\n\nTempo Esecuzione Totale: " + str(dizionario_SA_C['Tempo Esecuzione Totale']))
+
+
+                n_esecuzioni= list(dizionario_evoluzione.keys())
+                
+                f.write("\n Soluzioni Migliori: ")
+                for esecuzione in n_esecuzioni:
+                    dizionario_Evoluzione_Soluzioni_C= dizionario_evoluzione[esecuzione]
+                    
+                    f.write("\n----------------------------------------------------------------------------")
+                    f.write("\nEsecuzione: " + str(esecuzione) + "\n")
+
+                    chiavi= list(dizionario_Evoluzione_Soluzioni_C.keys())
+                    for chiave in chiavi:
+                        valori= dizionario_Evoluzione_Soluzioni_C[chiave]
+                        f.write("\n" + str(chiave) + ") ")
+                        f.write("\n Soluzione precedente: " + str(valori[0]))
+                        f.write("\n Costo Soluzione precedente: " + str(valori[1]))
+                        f.write("\n Soluzione migliore: " + str(valori[2]))
+                        f.write("\n Costo Soluzione migliore: " + str(valori[3]))
+                        f.write("\n Temperatura: " + str(valori[4]))
+                        f.write("\n Iterazione: " + str(valori[5]))
+                        f.write("\n archi_scelti: " + str(valori[6]))
+                    f.write("\n----------------------------------------------------------------------------")
+
+            f.close()
 
 
     # Controllo che nel dizionario passato ci siano anche i risultati dell'ILS
