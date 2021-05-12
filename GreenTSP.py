@@ -6,8 +6,7 @@ from InstanceHandler import generateInstance, manualInstance, leggi_istanza, sal
 from PlotGenerator import draw_map, print_2_opt, print_2_opt_arc_selected
 from ConstructiveEuristic import NearestNeighbour, Christofides_Algorithm, create_distance_dict
 from Cliente import euclidean_distance
-from LocalSearch import two_opt
-
+from IterativeLocalSearch import iterative_local_search
 
 if __name__ == "__main__":
     # Istanziazione dizionari dei risultati
@@ -157,7 +156,7 @@ if __name__ == "__main__":
 
             processazione_soluzione= 1
             # processazione_soluzione permette di svolgere il SA in differenti modi sulla stessa soluzione
-            while processazione_soluzione != 0: 
+            while processazione_soluzione == 1: 
                 print("Scegliere il tipo di esecuzione del SA: ")
                 print("\n1) Manuale")
                 print("\n2) Da File Config (Testing, lettura dei parametri da file di config)")
@@ -175,7 +174,7 @@ if __name__ == "__main__":
                     # Impostazione parametri di Default
                     # numero_iterazioni= math.factorial(N_CITIES-1)
                     numero_iterazioni= math.factorial(9)
-                    Temperature=  10000
+                    Temperature=  5000
                     decreaseT= 0.95
                     Tfrozen= 10
                     n_esecuzioni= 5
@@ -205,7 +204,6 @@ if __name__ == "__main__":
                         Tfrozen= int(input("\nInserire il valore di TFrozen: "))
                         n_esecuzioni= int(input("\nInserire il numero di volte che si vuole eseguire l'algoritmo: "))
                         decreaseT= float(input("\nInserire il fattore di diminuzione della temperatura (valore compreso tra 0 e 1): "))
-
 
                     print("\nScegliere quale soluzione processare tramite Simulated Annealing: ")
                     print("-1 Nearest Neighbour Solution")
@@ -374,13 +372,18 @@ if __name__ == "__main__":
                     # ------------------------------------------------------------------------------------------------------------   
                     # ------------------------------- Salvataggio ----------------------------------------------------------------
                     # Ad ogni chiamata del SA salvo i dati
-                    salva_risultati(dizionario_soluzioni, dizionario_dati) 
+                    #salva_risultati(dizionario_soluzioni, dizionario_dati) 
+
+                    # Ora dovrei fare la chiamata all'ILS
 
                     chiamata += 1
 
+                
+                
                 print("\nInserire:")
-                print("\n1) Se continuare a processare le stesse soluzioni costruttive con Simulated Annealing")
-                print("\n0) Se procedere e processare le soluzioni costruttive con Iterative Local Search o terminare il programma")
+                print("\n1) Per continuare a processare le stesse soluzioni costruttive con Simulated Annealing")
+                print("\n2) Per procedere e processare le soluzioni costruttive con Iterative Local Search o terminare il programma")
+                print("\n0) Exit")
                 processazione_soluzione= int(input("\nScelta: "))
                 
                 
@@ -389,15 +392,88 @@ if __name__ == "__main__":
 
 
             print("\n------------------------------------ Iterative Local Search --------------------------------------------")
-    
+            #processazione_soluzione= 1
+            while processazione_soluzione != 0:
+                print("\n\nProcessare:")
+                print("\n1- Soluzione Christofides")
+                print("\n2- Soluzione NearestNeighbour")
+                print("\n3- Entrambe le soluzioni")
+                print("\n0- Exit")
+                
+                processazione_soluzione= int(input("Inserire Scelta: "))
+
+                if processazione_soluzione == 1:
+                    tour_christofides= dizionario_Christofides['percorso']
+                    tempo_tot_christofides= dizionario_Christofides['tempo_tot']
+                    
+                    start_time= time.time()
+                    dizionario_ILS_C= iterative_local_search(tour_christofides, tempo_tot_christofides, G, k, dizionario_citta, dizionario_stazioni)
+                    end_time= time.time()
+
+                    dizionario_ILS_C['execution_time']= int(end_time - start_time)
+
+                    print("\nTour_ILS_C: " + str(dizionario_ILS_C['percorso']))
+                    print("tempo_tot_C: " + str(dizionario_ILS_C['tempo_tot']))
+                    print("tempo di esecuzione: " + str(int(end_time - start_time)))
+
+                elif processazione_soluzione == 2:
+                    tour_NN= dizionario_Nearest_Neighbour['percorso']
+                    tempo_tot_NN= dizionario_Nearest_Neighbour['tempo_tot']
+
+                    start_time= time.time()
+                    dizionario_ILS_NN= iterative_local_search(tour_NN, tempo_tot_NN, G, k, dizionario_citta, dizionario_stazioni)
+                    end_time= time.time()
+
+                    dizionario_ILS_NN['execution_time']= int(end_time - start_time)
+
+                    print("\nTour_ILS_NN: " + str(dizionario_ILS_NN['percorso']))
+                    print("tempo_tot_NN: " + str(dizionario_ILS_NN['tempo_tot']))
+                    print("tempo di esecuzione: " + str(int(end_time - start_time)))
+
+                elif processazione_soluzione == 3:
+                    tour_christofides= dizionario_Christofides['percorso']
+                    tempo_tot_christofides= dizionario_Christofides['tempo_tot']
+
+                    tour_NN= dizionario_Nearest_Neighbour['percorso']
+                    tempo_tot_NN= dizionario_Nearest_Neighbour['tempo_tot']
+
+                    start_time_C= time.time()
+                    dizionario_ILS_C= iterative_local_search(tour_christofides, tempo_tot_christofides, G, k, dizionario_citta, dizionario_stazioni)
+                    start_time_NN= time.time()
+                    dizionario_ILS_NN= iterative_local_search(tour_NN, tempo_tot_NN, G, k, dizionario_citta, dizionario_stazioni)
+                    end_time_NN= time.time()
+
+                    dizionario_ILS_C['execution_time']= int(start_time_NN - start_time_C)
+                    dizionario_ILS_NN['execution_time']= int(end_time_NN - start_time_NN)
+
+
+                    print("\nTour_ILS_C: " + str(dizionario_ILS_C['percorso']))
+                    print("tempo_tot_C: " + str(dizionario_ILS_C['tempo_tot']))
+                    print("tempo di esecuzione: " + str(int(start_time_NN - start_time_C)))
+
+                    print("\nTour_ILS_NN: " + str(dizionario_ILS_NN['percorso']))
+                    print("tempo_tot_NN: " + str(dizionario_ILS_NN['tempo_tot']))
+                    print("tempo di esecuzione: " + str(int(end_time_NN - start_time_C)))
+
             # Parametri ILS
             dizionario_dati['ILS']= {}
 
             # Iterative Local Search
 
             dizionario_MetaEuristiche['ILS']= {}
+            dizionario_ILS={}
+            dizionario_ILS['C']= {}
+            dizionario_ILS['NN']= {}
+
+            if processazione_soluzione != 0:
+                dizionario_ILS['C']= dizionario_ILS_C
+                dizionario_ILS['NN']= dizionario_ILS_NN
+
+            dizionario_MetaEuristiche['ILS']= dizionario_ILS
 
             dizionario_soluzioni['Meta Euristiche']= dizionario_MetaEuristiche
 
+            # Salvo il risultati:
+            salva_risultati(dizionario_soluzioni, dizionario_dati)
             print("\n------------------------------------ Fine Iterative Local Search ----------------------------------------")
             print("\n------------------------------------ Fine Esecuzione Meta-Euristiche ------------------------------------")

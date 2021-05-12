@@ -157,7 +157,7 @@ def leggi_istanza():
                 elif  leggo_citta == 1 and 'Clienti' not in str(line):
                     
                     list_line= line.split(':')
-                    print("list_line: " + str(list_line))
+                    #print("list_line: " + str(list_line))
                     dentro_quadre= list_line[1].split('[')
 
                     divido_valori= dentro_quadre[1].split(',')
@@ -196,7 +196,13 @@ def leggi_istanza():
 #                       -Meta Euristiche --> dizionario_MetaEuristiche: -SA --> dizionario_SA:   -NN -->   dizionario_SA_NN  -Esecuzione --> [dizionario_SA_NN_Esecuzione (chiavi elencate sotto), dizionario_Evoluzione_Soluzioni_NN]
 #                                                                                                -C  -->   dizionario_SA_C   -Esecuzione --> [dizionario_SA_C_Esecuzione  (chiavi elencate sotto), dizionario_Evoluzione_Soluzioni_C]
 #
-#                                                                       -ILS --> dizionario_ILS: {}(Per ora vuoto)
+#                                                                       -ILS --> dizionario_ILS: -NN -->   dizionario_ILS_C   -percorso
+#                                                                                                                             -durata_tot
+#                                                                                                                             -tempo di esecuzione
+#                                                                                                
+#                                                                                                -C -->    dizionario_ILS_NN  -percorso
+#                                                                                                                             -durata_tot
+#                                                                                                                             -tempo di esecuzione    
 #
 #                                       
 # Sia in Costruttive che in SA , NN e C sono composti dalle seguenti chiavi:
@@ -241,7 +247,7 @@ def salva_risultati(dizionario_soluzioni, dizionario_dati):
     # ------------------------------ Dizionario_Dati ------------------------------------------------------------------------------------
     # Flag che indicano la presenza o meno di dati da salvare
     flagSA= 0
-    # flagILS= 0
+    flagILS= 0
 
     # Recupero i dati principali d'Istanza
     dizionario_istanza= dizionario_dati['Dati']
@@ -509,5 +515,76 @@ def salva_risultati(dizionario_soluzioni, dizionario_dati):
                     f.write("\n Iterazione: " + str(valori[5]))
                     f.write("\n archi_scelti: " + str(valori[6]))
                 f.write("\n----------------------------------------------------------------------------")
+
+        f.close()
+
+
+    # Controllo che nel dizionario passato ci siano anche i risultati dell'ILS
+    dizionario_ILS= dizionario_MetaEuristiche['ILS']
+
+
+    if len(dizionario_ILS) > 0:
+        flag_ILS= 1
+        flag_ILS_NN= 0
+        flag_ILS_C= 0
+
+        dizionario_ILS_NN= dizionario_ILS['NN']
+        dizionario_ILS_C= dizionario_ILS['C']
+
+        if len(dizionario_ILS_NN) > 0:
+            flag_ILS_NN= 1
+        if len(dizionario_ILS_C) > 0:
+            flag_ILS_C= 1
+
+        name_file= path_dir + "/risultati_ILS.txt"
+        f= open(name_file,"w+")
+        
+        f.write("------ Algoritmo Costruttivo Greedy Nearest_Neighbour ------")
+        f.write("\nPercorso: " + str(dizionario_Nearest_Neighbour['percorso']))
+        f.write("\nDistanza: " + str(dizionario_Nearest_Neighbour['distanza']))
+        f.write("\nDurata Tour: " + str(dizionario_Nearest_Neighbour['tempo_tot']))
+        f.write("\nTempo Ricarica: " + str(dizionario_Nearest_Neighbour['tempo_ricarica']))
+        f.write("\nTempo Esecuzione Algoritmo: " + str(dizionario_Nearest_Neighbour['tempo_esec']))
+
+        f.write("\n\n------ Algoritmo Costruttivo non Greedy Christofides ------")
+        f.write("\nPercorso: " + str(dizionario_Christofides['percorso']))
+        f.write("\nDistanza: " + str(dizionario_Christofides['distanza']))
+        f.write("\nDurata Tour: " + str(dizionario_Christofides['tempo_tot']))
+        f.write("\nTempo Ricarica: " + str(dizionario_Christofides['tempo_ricarica']))
+        f.write("\nTempo Esecuzione Algoritmo: " + str(dizionario_Christofides['tempo_esec']))
+
+
+        f.write("\n\n\n----------------------------------------------------------------------------------- ITERATIVE LOCAL SEARCH --------------------------------------------------------------------------------------")
+
+        f.write("\n Numero citta: " + str(N_CITIES))
+
+        if flag_ILS_NN:
+            f.write("\n")
+            f.write("=" *191)
+            f.write("\n\n\t\t\tSoluzione Iniziale: Nearest Neighbour")
+            f.write("\n\n")
+            f.write("=" *191)
+
+            f.write("\n\n Percorso: " + str(dizionario_ILS_NN['percorso']))
+            f.write("\nTempo Totale Percorrenza: " + str(dizionario_ILS_NN['tempo_tot']))
+            f.write("\nTempo Esecuzione Algoritmo: " + str(dizionario_ILS_NN['execution_time']))
+
+        else:
+            f.write("\n\n Esecuzione ILS partendo dalla soluzione di una Nearest Neighbour non effettuata \n\n")
+
+        if flag_ILS_C:
+            f.write("\n")
+            f.write("=" *191)
+            f.write("\n\n\t\t\tSoluzione Iniziale: Christofides")
+            f.write("\n\n")
+            f.write("=" *191)
+
+            f.write("\n\n Percorso: " + str(dizionario_ILS_C['percorso']))
+            f.write("\nTempo Totale Percorrenza: " + str(dizionario_ILS_C['tempo_tot']))
+            f.write("\nTempo Esecuzione Algoritmo: " + str(dizionario_ILS_C['execution_time']))
+
+        else:
+            f.write("\n\n Esecuzione ILS partendo dalla soluzione di Christofides non effettuata \n\n")
+
 
         f.close()
