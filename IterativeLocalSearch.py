@@ -34,11 +34,18 @@ def spli_tour(percorso):
     return dizionario_sottopercorsi
 
 
-def acceptance_test(tempo_tot1,tempo_tot2):
-    if tempo_tot1 > tempo_tot2:
-        return 1
-    else:
-        return 0
+def acceptance_test(tour1, tour2, tempo_tot1,tempo_tot2, error_tolerance):
+    if tour1 != tour2:
+        if tempo_tot1 > tempo_tot2:
+            return 1
+        else:
+            p= random.randint(0,10)
+            if p < error_tolerance:
+                print("tolleranza errori")
+                #time.sleep(1)
+                return 1
+            else:
+                return 0
 
 
 def look_ahead1(percorso,i,G,autonomia,dizionario_citta,dizionario_stazioni):
@@ -216,6 +223,8 @@ def put_recharge_station(percorso,k,dizionario_citta,dizionario_stazioni):
             coordinate2= citta2.coordinate
 
         if i == 0:
+            if new_percorso[i+1] == 0:
+                return new_percorso
             # Non è mai possibile che dalla stazione di ricarica di partenza del sottopercorso o dal deposito iniziale del percorso, come primo spostamento si vada verso 
             # una stazione di ricarica, quindi quello che faccio è calcolare la distanza del primo spostamento
             distanza1_2= euclidean_distance(coordinate1,coordinate2)
@@ -366,7 +375,7 @@ def perturbazione(percorso, G, k, dizionario_citta, dizionario_stazioni):
 
 
 
-def iterative_local_search(percorso, tempo_tot_Percorso, G, k, dizionario_citta, dizionario_stazioni, n_iterazioni): 
+def iterative_local_search(percorso, tempo_tot_Percorso, G, k, dizionario_citta, dizionario_stazioni, n_iterazioni, error_tolerance): 
     
     # 1) Soluzione iniziale x0 è percorso ed è la soluzione ottenuta dalle euristiche costruttive
 
@@ -379,8 +388,6 @@ def iterative_local_search(percorso, tempo_tot_Percorso, G, k, dizionario_citta,
         print("==============================================================" + str(i) + "==============================================================================")
         acceptance_flag= 0
 
-        #while acceptance_flag == 0:
-
         tour1, tempo_tot1= perturbazione(tour, G, k, dizionario_citta, dizionario_stazioni) # bisogna tenere conto delle soluzioni precedenti
 
         # tour2, tempo_tot2= local_search_2_otp(tour1, tempo_tot1,  G, k, dizionario_citta, dizionario_stazioni)
@@ -388,7 +395,7 @@ def iterative_local_search(percorso, tempo_tot_Percorso, G, k, dizionario_citta,
         tour2, tempo_tot2= local_search_2_otp(tour1, tempo_tot1, G, k, dizionario_citta, dizionario_stazioni)
         # da local_search_2_otp esce sempre una soluzione accettabile, se nell'intorno generato di tour1 non ci sono soluzioni ammissibili , l'ottimo locale è tour1 e ritorna tour1
 
-        acceptance_flag= acceptance_test(tempo_tot,tempo_tot2)
+        acceptance_flag= acceptance_test(tour,tour2,tempo_tot,tempo_tot2, error_tolerance)
 
         # Se la soluzione passa il test di accettazione allora processo la nuova soluzione
         if acceptance_flag == 1:

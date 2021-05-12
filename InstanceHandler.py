@@ -574,8 +574,9 @@ def salva_risultati(dizionario_soluzioni, dizionario_dati):
         f.write("\n\n\n----------------------------------------------------------------------------------- ITERATIVE LOCAL SEARCH --------------------------------------------------------------------------------------")
         N_CITIES= dizionario_param_ILS['n_citta']
         n_iterazioni= dizionario_param_ILS['n_iterazioni']
+        error_tolerance= dizionario_param_ILS['error_tolerance']
 
-        f.write("\n Numero citta: " + str(N_CITIES) + "\t Numero Iterazioni: " + str(n_iterazioni))
+        f.write("\n Numero citta: " + str(N_CITIES) + "\t Numero Iterazioni: " + str(n_iterazioni) + "\t Error_Tolerance: " + str(error_tolerance))
 
         if flag_ILS_NN:
             f.write("\n")

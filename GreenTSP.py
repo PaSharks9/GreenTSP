@@ -426,8 +426,12 @@ if __name__ == "__main__":
                     print("\n\n------------------------------------ Iterative Local Search --------------------------------------------")
 
                     n_iterazioni= 1000
+                    error_tolerance= 3
+
                     print("\nParametri ILS: ")
-                    print("\n n_iterazioni: " + str(n_iterazioni))
+                    print("\nn_iterazioni: " + str(n_iterazioni))
+                    print("\nError tolerance: " + str(error_tolerance))
+
                     print("\nInserimento parametri Iterative Local Search:\n1)Parametri di Default\n2)Inserimento manuale")
                     scelta_iterazioni_ILS = int(input("\nScelta: "))
                     while scelta_iterazioni_ILS != 1 and scelta_iterazioni_ILS != 2:
@@ -437,6 +441,10 @@ if __name__ == "__main__":
 
                     if scelta_iterazioni_ILS == 2:
                         n_iterazioni= int(input("Inserire il numero di Iterazioni da eseguire: "))
+                        error_tolerance= int(input("Inserire la tolleranza agli errori (numero da 0 a 10): "))
+                        while error_tolerance > 10 or error_tolerance < 0:
+                            print("\n L'error tolerance deve essere compreso tra 0 e 10")
+                            error_tolerance= int(input("Inserire la tolleranza agli errori (numero da 0 a 10): "))
 
                     processazione_soluzione= 1
                     while processazione_soluzione != 0:
@@ -453,7 +461,7 @@ if __name__ == "__main__":
                             tempo_tot_christofides= dizionario_Christofides['tempo_tot']
                             
                             start_time= time.time()
-                            dizionario_ILS_C= iterative_local_search(tour_christofides, tempo_tot_christofides, G, k, dizionario_citta, dizionario_stazioni, n_iterazioni)
+                            dizionario_ILS_C= iterative_local_search(tour_christofides, tempo_tot_christofides, G, k, dizionario_citta, dizionario_stazioni, n_iterazioni, error_tolerance)
                             end_time= time.time()
 
                             dizionario_ILS_C['execution_time']= int(end_time - start_time)
@@ -467,7 +475,7 @@ if __name__ == "__main__":
                             tempo_tot_NN= dizionario_Nearest_Neighbour['tempo_tot']
 
                             start_time= time.time()
-                            dizionario_ILS_NN= iterative_local_search(tour_NN, tempo_tot_NN, G, k, dizionario_citta, dizionario_stazioni, n_iterazioni)
+                            dizionario_ILS_NN= iterative_local_search(tour_NN, tempo_tot_NN, G, k, dizionario_citta, dizionario_stazioni, n_iterazioni, error_tolerance)
                             end_time= time.time()
 
                             dizionario_ILS_NN['execution_time']= int(end_time - start_time)
@@ -484,9 +492,9 @@ if __name__ == "__main__":
                             tempo_tot_NN= dizionario_Nearest_Neighbour['tempo_tot']
 
                             start_time_C= time.time()
-                            dizionario_ILS_C= iterative_local_search(tour_christofides, tempo_tot_christofides, G, k, dizionario_citta, dizionario_stazioni, n_iterazioni)
+                            dizionario_ILS_C= iterative_local_search(tour_christofides, tempo_tot_christofides, G, k, dizionario_citta, dizionario_stazioni, n_iterazioni, error_tolerance)
                             start_time_NN= time.time()
-                            dizionario_ILS_NN= iterative_local_search(tour_NN, tempo_tot_NN, G, k, dizionario_citta, dizionario_stazioni, n_iterazioni)
+                            dizionario_ILS_NN= iterative_local_search(tour_NN, tempo_tot_NN, G, k, dizionario_citta, dizionario_stazioni, n_iterazioni, error_tolerance)
                             end_time_NN= time.time()
 
                             dizionario_ILS_C['execution_time']= int(start_time_NN - start_time_C)
@@ -500,6 +508,9 @@ if __name__ == "__main__":
                             print("\nTour_ILS_NN: " + str(dizionario_ILS_NN['percorso']))
                             print("tempo_tot_NN: " + str(dizionario_ILS_NN['tempo_tot']))
                             print("tempo di esecuzione: " + str(int(end_time_NN - start_time_C)))
+                            
+
+
 
                     # Parametri ILS
                     dizionario_dati['ILS']= {}
@@ -508,7 +519,7 @@ if __name__ == "__main__":
 
                     dizionario_parametri_ILS['n_iterazioni']= n_iterazioni
                     dizionario_parametri_ILS['n_citta']= N_CITIES
-                    
+                    dizionario_parametri_ILS['error_tolerance']= error_tolerance
                     # Iterative Local Search
 
                     dizionario_MetaEuristiche['ILS']= {}
