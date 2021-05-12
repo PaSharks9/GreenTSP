@@ -1,9 +1,9 @@
 import copy
+import sys
 import time
-import os
 import PlotGenerator as plt
 from Cliente import Cliente, euclidean_distance, soluzione_accettabile, calcola_costo
-from subprocess import PIPE, Popen
+
 
 # Conta il numero di città visitate
 def calcola_citta_visitate(percorso,dizionario_citta):
@@ -290,7 +290,7 @@ def NearestNeighbour(dizionario_citta, dizionario_stazioni, k, N_CITIES, Max_Axi
 
     tempo_totale= distanza_percorsa + tempo_ricarica
 
-    plt.draw_map(percorso, dizionario_citta, dizionario_stazioni, Max_Axis, False)
+    plt.draw_map(percorso, dizionario_citta, dizionario_stazioni, Max_Axis, '/NearestNeighbour/NearestNeighbour_GreenTSP.jpg')
 
 
     dizionario_Nearest_Neighbour= {}
@@ -1350,8 +1350,11 @@ def create_green_graph(christofides_graph_no_recharge, dizionario_stazioni, dizi
                     
                     # Se l'ultimo nodo visitato è una stazione la prossima distanza sarà la distanza tra tale stazione e il next_node
                     last_station= str(percorso[-1])
-                    stazione= int(last_station.replace('S',''))
-
+                    try:
+                        stazione= int(last_station.replace('S',''))
+                    except:
+                        sys.exit("percorso[-1]: " + str(percorso[-1]))
+                        
                     coordinate_stazione= dizionario_stazioni[stazione]
 
                     next_city= dizionario_citta[int(next_node)]
