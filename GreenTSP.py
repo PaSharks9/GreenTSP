@@ -3,7 +3,6 @@ import time
 import PlotGenerator as plt
 from SimulatedAnnealing import simulated_annealing
 from InstanceHandler import generateInstance, manualInstance, leggi_istanza, salva_risultati
-from PlotGenerator import draw_map, print_2_opt, print_2_opt_arc_selected
 from ConstructiveEuristic import NearestNeighbour, Christofides_Algorithm, create_distance_dict
 from Cliente import euclidean_distance
 from IterativeLocalSearch import iterative_local_search
@@ -187,11 +186,12 @@ if __name__ == "__main__":
 
                         # Impostazione parametri di Default
                         # numero_iterazioni= math.factorial(N_CITIES-1)
-                        numero_iterazioni= math.factorial(9)
-                        Temperature=  5000
-                        decreaseT= 0.95
-                        Tfrozen= 10
-                        n_esecuzioni= 5
+                        #numero_iterazioni= math.factorial(N_Cities)
+                        numero_iterazioni= 2000
+                        Temperature=  1000
+                        decreaseT= 0.8
+                        Tfrozen= 1
+                        n_esecuzioni= 3
                         
                         print("\n----------------------Parametri di Default:----------------------")
                         print("Temperature: " + str(Temperature))

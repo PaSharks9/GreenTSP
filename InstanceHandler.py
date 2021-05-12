@@ -3,6 +3,7 @@ import os
 from shutil import copyfile
 from pathlib import Path
 from Cliente import Cliente
+import PlotGenerator as plt
 
 
 def generateInstance(Max_Axis,N_CITIES):
@@ -457,8 +458,6 @@ def salva_risultati(dizionario_soluzioni, dizionario_dati):
 
                 n_esecuzioni= list(dizionario_evoluzione.keys())
                 
-
-
                 f.write("\n Soluzioni Migliori: ")
                 for esecuzione in n_esecuzioni:
                     dizionario_Evoluzione_Soluzioni_NN= dizionario_evoluzione[esecuzione]
@@ -535,7 +534,12 @@ def salva_risultati(dizionario_soluzioni, dizionario_dati):
 
             f.close()
 
-
+            # creo il plot
+            if flagSA_C == 1:
+                plt.draw_map(dizionario_SA_C_Esecuzione['Percorso'], dizionario_citta, dizionario_stazioni, Max_Axis, "SimulatedAnnealing/Christofides/C" + str(chiamata) + ".jpg")
+            if flagSA_NN == 1:
+                plt.draw_map(dizionario_SA_NN_Esecuzione['Percorso'], dizionario_citta, dizionario_stazioni, Max_Axis, "SimulatedAnnealing/NearestNeighbour/NN" + str(chiamata) + ".jpg")
+    
     # Controllo che nel dizionario passato ci siano anche i risultati dell'ILS
     dizionario_ILS= dizionario_MetaEuristiche['ILS']
     dizionario_param_ILS= dizionario_dati['ILS']
@@ -588,6 +592,7 @@ def salva_risultati(dizionario_soluzioni, dizionario_dati):
             f.write("\n\n Percorso: " + str(dizionario_ILS_NN['percorso']))
             f.write("\nTempo Totale Percorrenza: " + str(dizionario_ILS_NN['tempo_tot']))
             f.write("\nTempo Esecuzione Algoritmo: " + str(dizionario_ILS_NN['execution_time']))
+            plt.draw_map(dizionario_ILS_NN['percorso'], dizionario_citta, dizionario_stazioni, Max_Axis, "IterativeLocalSearch/NearestNeighbour/NN" + str(chiamata) + ".jpg")
 
         else:
             f.write("\n\n Esecuzione ILS partendo dalla soluzione di una Nearest Neighbour non effettuata \n\n")
@@ -602,9 +607,10 @@ def salva_risultati(dizionario_soluzioni, dizionario_dati):
             f.write("\n\n Percorso: " + str(dizionario_ILS_C['percorso']))
             f.write("\nTempo Totale Percorrenza: " + str(dizionario_ILS_C['tempo_tot']))
             f.write("\nTempo Esecuzione Algoritmo: " + str(dizionario_ILS_C['execution_time']))
-
+            plt.draw_map(dizionario_ILS_C['percorso'], dizionario_citta, dizionario_stazioni, Max_Axis, "IterativeLocalSearch/Christofides/C" + str(chiamata) + ".jpg")
         else:
             f.write("\n\n Esecuzione ILS partendo dalla soluzione di Christofides non effettuata \n\n")
 
+        
 
         f.close()

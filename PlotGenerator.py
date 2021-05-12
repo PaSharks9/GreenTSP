@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
 
-def draw_map(percorso, dizionario_citta, dizionario_stazioni, Max_Axis, ottimizzazione):
+def draw_map(percorso, dizionario_citta, dizionario_stazioni, Max_Axis, dir):
     # -------------------- Creo SubPlot --------------------
     figNN= plt.figure() 
     # -------------------- INIZIALIZZO GRAFICO --------------------
@@ -60,11 +60,6 @@ def draw_map(percorso, dizionario_citta, dizionario_stazioni, Max_Axis, ottimizz
 
     # Disegno il deposito che si trova in coordinate [0,0]
     plt.scatter(0,0,s=50, edgecolors='none', c='blue', label="Deposito")
-
-    if ottimizzazione is False:
-        plt.savefig('img/NearestNeighbour/TSPMap.jpg')
-    else:
-        plt.savefig('img/Nearest_Neighbour_ott_ricarica/TSPMap.jpg')
     
     # ------------------------- Disegno del Tour -------------------------
     current_index= 0
@@ -76,10 +71,11 @@ def draw_map(percorso, dizionario_citta, dizionario_stazioni, Max_Axis, ottimizz
     while next_index < lunghezza_percorso:
         current_node= percorso[current_index]
         next_node= percorso[next_index]
-
+        #print("current_node: " + str(current_node))
+        #print("next_node: " + str(next_node))
         if 'S' not in str(current_node) and current_node != 0:
-            current_client= dizionario_citta.get(current_node)
-            current_coordinate= current_client.coordinate
+                current_client= dizionario_citta.get(current_node)
+                current_coordinate= current_client.coordinate
         elif current_node == 0:
             current_coordinate= [0,0]
         else:
@@ -88,7 +84,7 @@ def draw_map(percorso, dizionario_citta, dizionario_stazioni, Max_Axis, ottimizz
 
         if 'S' not in str(next_node) and next_node != 0:
             next_client= dizionario_citta.get(int(next_node))
-            next_coordinate= next_client.coordinate
+            next_coordinate= next_client.coordinate    
         elif next_node == 0:
             next_coordinate= [0,0]
         else:
@@ -113,10 +109,8 @@ def draw_map(percorso, dizionario_citta, dizionario_stazioni, Max_Axis, ottimizz
 
     plt.grid(True)
 
-    if ottimizzazione is False:
-        plt.savefig('img/NearestNeighbour/NearestNeighbour_GreenTSP.jpg')
-    else:
-        plt.savefig('img/Nearest_Neighbour_ott_ricarica/NearestNeighbour_Ottimizzazione_Ricarica.jpg')
+
+    plt.savefig('img/'+ str(dir))
 
     plt.close(figNN)
 
