@@ -366,7 +366,7 @@ def perturbazione(percorso, G, k, dizionario_citta, dizionario_stazioni):
 
 
 
-def iterative_local_search(percorso, tempo_tot_Percorso, G, k, dizionario_citta, dizionario_stazioni): 
+def iterative_local_search(percorso, tempo_tot_Percorso, G, k, dizionario_citta, dizionario_stazioni, n_iterazioni): 
     
     # 1) Soluzione iniziale x0 è percorso ed è la soluzione ottenuta dalle euristiche costruttive
 
@@ -375,7 +375,7 @@ def iterative_local_search(percorso, tempo_tot_Percorso, G, k, dizionario_citta,
     tour, tempo_tot= local_search_2_otp(percorso, tempo_tot_Percorso,  G, k, dizionario_citta, dizionario_stazioni)
 
     #3) Entro nel ciclo (quante volte ciclare?)
-    for i in range(0,2000):
+    for i in range(0,n_iterazioni+1):
         print("==============================================================" + str(i) + "==============================================================================")
         acceptance_flag= 0
 

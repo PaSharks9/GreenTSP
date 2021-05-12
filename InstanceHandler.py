@@ -233,7 +233,8 @@ def leggi_istanza():
 #                                                                                                                               - Temperatura
 #                                                                                                                               - Tfrozen
 #                                                                                                                               - Fattore Decrescita
-#                  - ILS --> dizionario_param_ILS: {} ( per ora ancora vuoto )
+#                  - ILS --> dizionario_param_ILS: - n_citta
+#                                                  - n_iterazioni
 #
 #
 #
@@ -537,7 +538,7 @@ def salva_risultati(dizionario_soluzioni, dizionario_dati):
 
     # Controllo che nel dizionario passato ci siano anche i risultati dell'ILS
     dizionario_ILS= dizionario_MetaEuristiche['ILS']
-
+    dizionario_param_ILS= dizionario_dati['ILS']
 
     if len(dizionario_ILS) > 0:
         flag_ILS= 1
@@ -571,8 +572,10 @@ def salva_risultati(dizionario_soluzioni, dizionario_dati):
 
 
         f.write("\n\n\n----------------------------------------------------------------------------------- ITERATIVE LOCAL SEARCH --------------------------------------------------------------------------------------")
+        N_CITIES= dizionario_param_ILS['n_citta']
+        n_iterazioni= dizionario_param_ILS['n_iterazioni']
 
-        f.write("\n Numero citta: " + str(N_CITIES))
+        f.write("\n Numero citta: " + str(N_CITIES) + "\t Numero Iterazioni: " + str(n_iterazioni))
 
         if flag_ILS_NN:
             f.write("\n")

@@ -1,61 +1,63 @@
-In dizionario_SA_C (e reciproco NN) ho come chiavi il numero di esecuzione e come valore il dizionario rispettivo della soluzione di quell'esecuzione
-
------------------------ Salvataggio Risultati Algoritmi------------------------------------
-
-Prima di fare il salvataggio devo impacchettare tutti i dati nei relativi dizionari
-
- Legenda:
-
-   -  indica la chiave
-   --> indica il dizionario risultante dall'uso di quella chiave
-
----------------------------------------------------------------------------------------------
-Come è costituito l'albero del dizionario: dizionario_soluzioni:
-
- dizionario_soluzioni: -Costruttive --> dizionario_Costruttive: -NN --> dizionario_Nearest_Neighbour(chiavi elencate sotto)
-                                                                -C --> dizionario_Christofides (chiavi elencate sotto)              
-                        
-                       -Meta Euristiche --> dizionario_MetaEuristiche: -SA --> dizionario_SA:   -NN -->   dizionario_SA_NN   -Esecuzione --> [dizionario_SA_NN_Esecuzione (chiavi elencate sotto), dizionario_Evoluzione_Soluzioni_NN]
-															     -Tempo Esecuzione Totale
-
-                                                                                                -C  -->   dizionario_SA_C    -Esecuzione --> [dizionario_SA_C_Esecuzione  (chiavi elencate sotto), dizionario_Evoluzione_Soluzioni_C]
-														             -Tempo Esecuzione Totale
-                                                                       -ILS -->{}(Per ora vuoto)
-			                
-In Costruttive, NN e C hanno le seguenti chiavi:
-                       - percorso
-                       - distanza
-                       - tempo_tot
-                       - tempo_ricarica
-                       - tempo_esec
-
-                                       
-In SA , NN e C sono composti dalle seguenti chiavi:
-                       - Percorso
-                       - Distanza Totale
-                       - Tempo Totale (di percorrenza)
-                       - Tempo Ricarica
-                       - Tempo Esecuzione (relativo a quella singola esecuzione)
-
-Sia dizionario_Evoluzione_Soluzioni_C che dizionario_Evoluzione_Soluzioni_NN sono relativi ad una esecuzione, al loro interno avremo le seguenti chiavi:
-   - Numero soluzione trovata
-
-come valori avrò: 
-[Soluzione migliore corrente (precedente), Costo soluzione migliore corrente(precedente), Soluzione migliore nuova (che è quella che viene trovata nell'iterazione corrente nella corrente temperatura), Costo soluzione nuovae, Temperatura, Iterazione, archi scelti(che hanno portato al miglioramento)]
-
----------------------------------------------------------------------------------------------
-   
- dizionario_dati: -Dati --> dizionario_istanza:  - Lunghezza Assi
-                                                 - Stazioni Ricarica --> dizionario_stazioni
-                                                 - Citta             --> dizionario_citta
-                                                 - Dizionario Distanze
-						 - Autonomia
-                  
-                 - SA --> dizionario_parametri_SA: - NCitta
-                                                   - Iterazioni
-                                                   - Temperatura
-                                                   - Tfrozen
-                                                   - Fattore Decrescita
-               
-                 - ILS --> {} ( per ora ancora vuoto )
-
+# ---------------------------------------------------- Guida al recupero dei dati dei dizionari in Salva Risultati -------------------------------------------------------------------------------------------------
+#
+# In dizionario_SA_C (e reciproco NN) ho come chiavi il numero di esecuzione e come valore il dizionario rispettivo della soluzione di quell'esecuzione
+#
+#
+# Legenda:
+#
+#   -  indica la chiave
+#   --> indica il dizionario risultante dall'uso di quella chiave
+#
+#
+# ---------------------------------------------------------------------------------------------
+# Come è costituito l'albero del dizionario: dizionario_soluzioni:
+#
+# dizionario_soluzioni: -Costruttive --> dizionario_Costruttive: -NN --> dizionario_Nearest_Neighbour(chiavi elencate sotto)
+#                                                                -C --> dizionario_Christofides (chiavi elencate sotto)              
+#                        
+#                       -Meta Euristiche --> dizionario_MetaEuristiche: -SA --> dizionario_SA:   -chiamata-->  dizionario_SA_Chiamata: -NN -->   dizionario_SA_NN  -Esecuzione --> [dizionario_SA_NN_Esecuzione (chiavi elencate sotto), dizionario_Evoluzione_Soluzioni_NN]
+#                                                                                                                                      -C  -->   dizionario_SA_C   -Esecuzione --> [dizionario_SA_C_Esecuzione  (chiavi elencate sotto), dizionario_Evoluzione_Soluzioni_C]
+#
+#                                                                       -ILS --> dizionario_ILS: -NN -->   dizionario_ILS_C   -percorso
+#                                                                                                                             -durata_tot
+#                                                                                                                             -tempo di esecuzione
+#                                                                                                
+#                                                                                                -C -->    dizionario_ILS_NN  -percorso
+#                                                                                                                             -durata_tot
+#                                                                                                                             -tempo di esecuzione    
+#
+#                                       
+# Sia in Costruttive che in SA , NN e C sono composti dalle seguenti chiavi:
+#                       - Percorso
+#                       - Distanza Totale
+#                       - Tempo Totale (di percorrenza)
+#                       - Tempo Ricarica
+#                       - Tempo Esecuzione (relativo a quella singola esecuzione)
+#
+# Sia dizionario_Evoluzione_Soluzioni_C che dizionario_Evoluzione_Soluzioni_NN sono relativi ad una esecuzione, al loro interno avremo le seguenti chiavi:
+#
+#   - Soluzione corrente (precedente)
+#   - Costo soluzione corrente
+#   - Soluzione migliore (che è quella che viene trovata nell'iterazione corrente nella corrente temperatura)
+#   - Costo soluzione precedente
+#   - Temperatura
+#   - Iterazione
+#
+# ---------------------------------------------------------------------------------------------
+#   
+# dizionario_dati: -Dati --> dizionario_istanza:   - lunghezza assi
+#                                                  - Stazioni ricarica
+#                                                  - clienti
+#                                                  - Dizionario distanze
+#                   
+#                  - SA --> dizionario_parametri_SA:  -chiamata --> dizionario_param_SA: -Parametri --> dizionario_parametri:   - NCitta
+#                                                                                                                               - Iterazioni
+#                                                                                                                               - Temperatura
+#                                                                                                                               - Tfrozen
+#                                                                                                                               - Fattore Decrescita
+#                  - ILS --> dizionario_param_ILS: -n_citta
+						   -n_iterazioni
+#
+#
+#
+#

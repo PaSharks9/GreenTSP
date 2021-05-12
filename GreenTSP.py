@@ -424,6 +424,20 @@ if __name__ == "__main__":
                 elif scelta_meta_euristiche == 2:
 
                     print("\n\n------------------------------------ Iterative Local Search --------------------------------------------")
+
+                    n_iterazioni= 1000
+                    print("\nParametri ILS: ")
+                    print("\n n_iterazioni: " + str(n_iterazioni))
+                    print("\nInserimento parametri Iterative Local Search:\n1)Parametri di Default\n2)Inserimento manuale")
+                    scelta_iterazioni_ILS = int(input("\nScelta: "))
+                    while scelta_iterazioni_ILS != 1 and scelta_iterazioni_ILS != 2:
+                        print("\nErrore nella scelta, il numero inserito non rientra tra le scelte, riprovare..")
+                        print("\nInserimento parametri Iterative Local Search:\n1)Parametri di Default\n2)Inserimento manuale")
+                        scelta_iterazioni_ILS = int(input("\nScelta: "))    
+
+                    if scelta_iterazioni_ILS == 2:
+                        n_iterazioni= int(input("Inserire il numero di Iterazioni da eseguire: "))
+
                     processazione_soluzione= 1
                     while processazione_soluzione != 0:
                         print("\n\nProcessare:")
@@ -432,14 +446,14 @@ if __name__ == "__main__":
                         print("\n3- Entrambe le soluzioni")
                         print("\n0- Exit")
                         
-                        processazione_soluzione= int(input("Inserire Scelta: "))
+                        processazione_soluzione= int(input("\nInserire Scelta: "))
 
                         if processazione_soluzione == 1:
                             tour_christofides= dizionario_Christofides['percorso']
                             tempo_tot_christofides= dizionario_Christofides['tempo_tot']
                             
                             start_time= time.time()
-                            dizionario_ILS_C= iterative_local_search(tour_christofides, tempo_tot_christofides, G, k, dizionario_citta, dizionario_stazioni)
+                            dizionario_ILS_C= iterative_local_search(tour_christofides, tempo_tot_christofides, G, k, dizionario_citta, dizionario_stazioni, n_iterazioni)
                             end_time= time.time()
 
                             dizionario_ILS_C['execution_time']= int(end_time - start_time)
@@ -453,7 +467,7 @@ if __name__ == "__main__":
                             tempo_tot_NN= dizionario_Nearest_Neighbour['tempo_tot']
 
                             start_time= time.time()
-                            dizionario_ILS_NN= iterative_local_search(tour_NN, tempo_tot_NN, G, k, dizionario_citta, dizionario_stazioni)
+                            dizionario_ILS_NN= iterative_local_search(tour_NN, tempo_tot_NN, G, k, dizionario_citta, dizionario_stazioni, n_iterazioni)
                             end_time= time.time()
 
                             dizionario_ILS_NN['execution_time']= int(end_time - start_time)
@@ -470,9 +484,9 @@ if __name__ == "__main__":
                             tempo_tot_NN= dizionario_Nearest_Neighbour['tempo_tot']
 
                             start_time_C= time.time()
-                            dizionario_ILS_C= iterative_local_search(tour_christofides, tempo_tot_christofides, G, k, dizionario_citta, dizionario_stazioni)
+                            dizionario_ILS_C= iterative_local_search(tour_christofides, tempo_tot_christofides, G, k, dizionario_citta, dizionario_stazioni, n_iterazioni)
                             start_time_NN= time.time()
-                            dizionario_ILS_NN= iterative_local_search(tour_NN, tempo_tot_NN, G, k, dizionario_citta, dizionario_stazioni)
+                            dizionario_ILS_NN= iterative_local_search(tour_NN, tempo_tot_NN, G, k, dizionario_citta, dizionario_stazioni, n_iterazioni)
                             end_time_NN= time.time()
 
                             dizionario_ILS_C['execution_time']= int(start_time_NN - start_time_C)
@@ -489,7 +503,12 @@ if __name__ == "__main__":
 
                     # Parametri ILS
                     dizionario_dati['ILS']= {}
+                    dizionario_parametri_ILS= {}
+                    dizionario_dati['ILS']= dizionario_parametri_ILS
 
+                    dizionario_parametri_ILS['n_iterazioni']= n_iterazioni
+                    dizionario_parametri_ILS['n_citta']= N_CITIES
+                    
                     # Iterative Local Search
 
                     dizionario_MetaEuristiche['ILS']= {}
@@ -497,9 +516,9 @@ if __name__ == "__main__":
                     dizionario_ILS['C']= {}
                     dizionario_ILS['NN']= {}
 
-                    if processazione_soluzione != 0:
-                        dizionario_ILS['C']= dizionario_ILS_C
-                        dizionario_ILS['NN']= dizionario_ILS_NN
+                    
+                    dizionario_ILS['C']= dizionario_ILS_C
+                    dizionario_ILS['NN']= dizionario_ILS_NN
 
                     dizionario_MetaEuristiche['ILS']= dizionario_ILS
 
