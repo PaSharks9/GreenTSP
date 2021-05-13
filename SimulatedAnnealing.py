@@ -118,10 +118,6 @@ def simulated_annealing(dizionario_soluzione, dizionario_citta, dizionario_stazi
                     # Se random_choice è minore del valore esponenziale allora cambio soluzione corrente con quella nuova, anche se ciò non comporta un miglioramento
                     # questo viene fatto per provare a sfuggire agli eventuali ottimi locali
 
-                    """soluzione_precedente= soluzione_corrente
-                    costo_soluzione_precedente= costo_soluzione_corrente
-                    distanza_percorsa_precedente= distanza_percorsa_soluzione_corrente"""
-
                     soluzione_corrente= new_solution
                     costo_soluzione_corrente= costo_new_solution
                     distanza_percorsa_soluzione_corrente= distanza_percorsa_new_sol
@@ -132,24 +128,7 @@ def simulated_annealing(dizionario_soluzione, dizionario_citta, dizionario_stazi
              
             # Uscito dal controllo sul deltaE, controllo se sono nel caso per verificare la correttezza della soluzione        
             # Per aver raggiunto l'equilibrio la soluzione corrente deve essere ammissibile, quindi devo fare un controllo sull'ammissibilità della soluzione, altrimenti continuo a rimanere nel ciclo
-            """if iteration == numero_iterazioni - 1:
-                # Se siamo nell'ultima iterazione devo controllare che la soluzione sia accettabile 
-                if soluzione_accettabile(soluzione_corrente, G, k, dizionario_citta, dizionario_stazioni):
-                    # Se la soluzione è accettabile, aumento iteration e usciro dal ciclo delle iterazioni in quanto siamo in una situazione stabile
-                    iteration += 1
-                else:
-                    if iterazione_fallimento == numero_iterazioni // 2:
-                        # Se non è riuscito a rientrare in una situazione di stabilità torno nello stato stabile precedente e rifaccio la computazione, sperando che la componente casuale mi faccia uscire dal loop
-                        soluzione_corrente= soluzione_precedente
-                        costo_soluzione_corrente= costo_soluzione_precedente
-                        distanza_percorsa_soluzione_corrente= distanza_percorsa_precedente
-                        break   
-                    
-                    print("soluzione non accettabile, continuo a iterare anche se dovrei abbassare la T")
-                    iterazione_fallimento += 1
-                # Se invece la soluzione corrente non è accettabile alla fine delle n iterazioni, non siamo in una situazione di equilibrio (in quanto la soluzione non è accettabile) e quindi non aumento il contatore e continuo a iterare fino a quando non trovo una soluzione accettabile
-            else:
-                iteration += 1"""
+
         
         # Finito While
         Temperature= Temperature * decreaseT

@@ -24,9 +24,6 @@ def stampa_soluzioni(dizionario, nome_algoritmo):
         print("\n" + "-" * 50)
 
 
-
-
-
 if __name__ == "__main__":
     # Istanziazione dizionari dei risultati
 

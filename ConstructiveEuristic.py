@@ -302,7 +302,6 @@ def NearestNeighbour(dizionario_citta, dizionario_stazioni, k, N_CITIES, Max_Axi
 
     return dizionario_Nearest_Neighbour
 
-
 # ---------------------------------------- NON GREEDY ----------------------------------------
 # ---------------------------------------- Christofides_Algorithm ----------------------------------------
 # Per MST
@@ -1140,8 +1139,6 @@ def create_green_graph1(christofides_graph_no_recharge, dizionario_stazioni, diz
     tempo_totale= tempo_ricarica + distanza_percorsa
     return christofides_graph_no_recharge, distanza_percorsa, tempo_ricarica, percorso, tempo_totale
 
-
-
 def crea_dizionario_percorso(percorso, dizionario_citta, dizionario_stazioni):
 
     dizionario_percorso={}
@@ -1268,7 +1265,6 @@ def crea_dizionario_percorso(percorso, dizionario_citta, dizionario_stazioni):
                 dizionario_percorso[node2]= dizionario_arco
     
     return dizionario_percorso
-
 
 def create_green_graph(christofides_graph_no_recharge, dizionario_stazioni, dizionario_citta, k):
 
@@ -1489,8 +1485,6 @@ def create_green_graph(christofides_graph_no_recharge, dizionario_stazioni, dizi
     christofides_graph= crea_dizionario_percorso(percorso,dizionario_citta,dizionario_stazioni)
 
     return christofides_graph, distanza_percorsa, tempo_ricarica, percorso, tempo_totale
-
-
 
 def minimum_weight_matching(MST, G, odd_vert):  # MST è una lista di triple, (v1 v2 distanza),  G è un dizionario di dizionari, odd_vert è una lista di vertici
     import random

@@ -13,7 +13,6 @@ def euclidean_distance(A,B):
 
     return int(d)
 
-
 def soluzione_accettabile(percorso, G, k, dizionario_citta, dizionario_stazioni):
     index= 0
     autonomia= k
@@ -85,9 +84,6 @@ def soluzione_accettabile(percorso, G, k, dizionario_citta, dizionario_stazioni)
 
     return True
 
-
-
-
 def soluzione_accettabile_debug(percorso, G, k, dizionario_citta, dizionario_stazioni):
     index= 0
     autonomia= k
@@ -158,10 +154,6 @@ def soluzione_accettabile_debug(percorso, G, k, dizionario_citta, dizionario_sta
     # Se sono arrivato fino a qui significa che tutto è regolare quindi ritorno True
 
     return True
-
-
-
-
 
 def calcola_costo(G, k, dizionario_citta, dizionario_stazioni, percorso):
     distanza_percorsa= 0
@@ -282,8 +274,6 @@ def calcola_costo(G, k, dizionario_citta, dizionario_stazioni, percorso):
 
     return tempo_tot, distanza_percorsa
     
-
-
 class Cliente:
     def __init__(self,x,y,dizionario_stazioni,n):
         # Fintanto che le stazioni le lascio in mezzo ai quadranti, le stazioni più vicine ad ogni cliente è la stazione del proprio quadrante
@@ -316,9 +306,8 @@ class Cliente:
             return 2
         elif self.coordinate[0] <= 0 and self.coordinate[1] < 0: 
             return 3
-        elif self.coordinate[0] <= 0 and self.coordinate[1] > 0:
+        elif self.coordinate[0] <= 0 and self.coordinate[1] >= 0:
             return 4
-
 
 if __name__ == "__main__":
     k= 56
@@ -358,7 +347,10 @@ if __name__ == "__main__":
         dizionario_citta[i]= cliente
         i += 1
     
-    percorso= [0, 9, 1, 5, '1S', 4, 7, '3S', 8, 2, 3, 6, 0]
+    """percorso= [0, 9, 1, 5, '1S', 4, 7, '3S', 8, 2, 3, 6, 0]
     
 
-    print("res: " + str(soluzione_accettabile_debug(percorso, G, k, dizionario_citta, dizionario_stazioni)))
+    print("res: " + str(soluzione_accettabile_debug(percorso, G, k, dizionario_citta, dizionario_stazioni)))"""
+
+    cliente= dizionario_citta[5]
+    print("quadrante: " + str(cliente.get_quadrant()))

@@ -114,7 +114,6 @@ def draw_map(percorso, dizionario_citta, dizionario_stazioni, Max_Axis, dir):
 
     plt.close(figNN)
 
-
 def draw_mst(dizionario_citta, Max_Axis, archi_usati):
     # -------------------- Creo SubPlot --------------------
     figMST= plt.figure()
@@ -532,9 +531,6 @@ def draw_Christofides_green(christofides_graph, dizionario_citta, dizionario_sta
     plt.savefig(directory+filename)
     plt.close(figCG)
 
-
-
-
 def print_2_opt_arc_selected(percorso, archi_selezionati, dizionario_citta, dizionario_stazioni, Max_Axis):
     # -------------------- Creo SubPlot --------------------
     figLSAS= plt.figure() 
@@ -629,7 +625,6 @@ def print_2_opt_arc_selected(percorso, archi_selezionati, dizionario_citta, dizi
     filename= "LS_Archi_Selezionati.jpg" 
     plt.savefig(directory+filename)
     plt.close(figLSAS)
-
 
 def print_2_opt(percorso, dizionario_citta, dizionario_stazioni, Max_Axis):
     # -------------------- Creo SubPlot --------------------

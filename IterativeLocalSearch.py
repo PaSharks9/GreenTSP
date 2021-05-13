@@ -1,9 +1,7 @@
 import random
 import sys
 import time
-import math
-from Cliente import euclidean_distance, Cliente, soluzione_accettabile, calcola_costo, soluzione_accettabile_debug
-from ConstructiveEuristic import create_green_graph
+from Cliente import euclidean_distance, Cliente, calcola_costo
 from LocalSearch import local_search_2_otp
 
 # Crea le sottosequenze su cui effettuare la local search
@@ -33,7 +31,6 @@ def spli_tour(percorso):
 
     return dizionario_sottopercorsi
 
-
 def acceptance_test(tour1, tour2, tempo_tot1,tempo_tot2, error_tolerance):
     if tour1 != tour2:
         if tempo_tot1 > tempo_tot2:
@@ -46,45 +43,6 @@ def acceptance_test(tour1, tour2, tempo_tot1,tempo_tot2, error_tolerance):
                 return 1
             else:
                 return 0
-
-
-def look_ahead1(percorso,i,G,autonomia,dizionario_citta,dizionario_stazioni):
-    
-    if i == 0 and percorso[i] != 0:
-        print("percorso[i]: " + str(percorso[i]))
-        stazione= percorso[i].replace('S','')
-        coordinate1= dizionario_stazioni[int(stazione)]
-
-        citta= dizionario_citta[i+1]
-        coordinate2= citta.coordinate
-
-        distanza1_2= euclidean_distance(coordinate1,coordinate2)
-    else:
-    
-        citta1= int(percorso[i])
-
-        dizionario_distanze1= G[int(citta1)]
-        distanza1_2= dizionario_distanze1[int(percorso[i+1])]
-
-    
-    autonomia_futura= autonomia-distanza1_2
-
-    if int(percorso[i+1]) != 0:
-        citta2= dizionario_citta[int(percorso[i+1])]
-        distanza_stazione= citta2.distanza_stazione
-
-        if autonomia_futura < distanza_stazione:
-            return True
-        else:
-            return False
-
-    else:
-
-        if autonomia_futura < 0:
-            return True
-        else:
-            return False
-
 
 def look_ahead(percorso,i,G,autonomia,dizionario_citta,dizionario_stazioni):
     
@@ -125,7 +83,6 @@ def look_ahead(percorso,i,G,autonomia,dizionario_citta,dizionario_stazioni):
             return True
         else:
             return False
-
 
 def calcola_indice_max(percorso,autonomia,dizionario_citta,dizionario_stazioni):
     
@@ -193,7 +150,6 @@ def calcola_indice_max(percorso,autonomia,dizionario_citta,dizionario_stazioni):
     print("nodo: " + str(percorso[i]))
     print("i: " + str(i))
     time.sleep(20)
-
 
 def put_recharge_station(percorso,k,dizionario_citta,dizionario_stazioni):
     autonomia= k
@@ -275,8 +231,6 @@ def put_recharge_station(percorso,k,dizionario_citta,dizionario_stazioni):
     print("percorso: " + str(new_percorso))
     time.sleep(20)
 
-
-
 def perturbazione(percorso, G, k, dizionario_citta, dizionario_stazioni):
 
     # Find stations
@@ -349,6 +303,7 @@ def perturbazione(percorso, G, k, dizionario_citta, dizionario_stazioni):
         print("id_cliente: " + str(id_cliente))
         print("cliente: " + str(cliente))
         print("quadrante_cliente: " + str(quadrante_cliente))
+        print("coordinate_cliente: " + str(cliente.coordinate))
         
     new_station= str(quadrante_cliente) + 'S'
 
@@ -372,8 +327,6 @@ def perturbazione(percorso, G, k, dizionario_citta, dizionario_stazioni):
     tempo_tot, _= calcola_costo(G, k, dizionario_citta, dizionario_stazioni, new_final_tour)
 
     return new_final_tour, tempo_tot
-
-
 
 def iterative_local_search(percorso, tempo_tot_Percorso, G, k, dizionario_citta, dizionario_stazioni, n_iterazioni, error_tolerance): 
     
@@ -412,8 +365,6 @@ def iterative_local_search(percorso, tempo_tot_Percorso, G, k, dizionario_citta,
     dizionario_ILS['tempo_tot']= tempo_tot
     
     return dizionario_ILS
-
-
 
 
 if __name__ == "__main__":
