@@ -114,7 +114,7 @@ def draw_map(percorso, dizionario_citta, dizionario_stazioni, Max_Axis, dir):
 
     plt.close(figNN)
 
-def draw_mst(dizionario_citta, Max_Axis, archi_usati):
+def draw_mst(dizionario_citta, Max_Axis, archi_usati, flag_pm):
     # -------------------- Creo SubPlot --------------------
     figMST= plt.figure()
     # -------------------- INIZIALIZZO GRAFICO --------------------
@@ -153,8 +153,10 @@ def draw_mst(dizionario_citta, Max_Axis, archi_usati):
 
     # Disegno il deposito che si trova in coordinate [0,0]
     plt.scatter(0,0,s=50, edgecolors='none', c='blue', label="Deposito")
-
-    plt.savefig('img/Christofides/MST/MST_CitiesMap.jpg')
+    if flag_pm == 0:
+        plt.savefig('img/Christofides/MST/MST_CitiesMap.jpg')
+    else:
+        plt.savefig('img/Christofides/Perfect_Matching/PM_Map.jpg')
 
     #-------------------- Disegno semirette --------------------
     #i = 0
@@ -184,8 +186,11 @@ def draw_mst(dizionario_citta, Max_Axis, archi_usati):
 
         plt.savefig(directory+filename)
         i += 1"""
-    
-    plt.savefig('img/Christofides/MST/MST_Map.jpg')
+    if flag_pm == 0:
+        plt.savefig('img/Christofides/MST/MST_Map.jpg')
+    else:
+        plt.savefig('img/Christofides/Perfect_Matching/PM.jpg')
+   
     plt.close(figMST)
 
 def draw_perfect_matching(dizionario_citta, Max_Axis, subgraph, archi_usati):

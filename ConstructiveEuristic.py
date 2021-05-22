@@ -154,7 +154,6 @@ def NearestNeighbour(dizionario_citta, dizionario_stazioni, k, N_CITIES, Max_Axi
 
     n_citta_visitate= calcola_citta_visitate(percorso,dizionario_citta)
 
-
     # Fino a quando non ho visitato tutte le citta cerco il prossimo nodo da visitare
     # Sto nel ciclo fino a quando non mi manca di inserire nel percorso l'ultima città da visitare ( Es. N_CITIES= 10, le città sono in tutto 9 perchè 
     # nelle 10 città c'è anche 1 deposito, quindi sto nel ciclo fino a un n di città nel percorso < 9 cioè fino a 8 città, quando aggiungo la 9 e quindi l'ultima esco)
@@ -1490,6 +1489,8 @@ def minimum_weight_matching(MST, G, odd_vert):  # MST è una lista di triple, (v
     import random
     random.shuffle(odd_vert)
 
+    pm_list=[]
+
     while odd_vert:
         v = odd_vert.pop()
         length = float("inf")
@@ -1501,7 +1502,9 @@ def minimum_weight_matching(MST, G, odd_vert):  # MST è una lista di triple, (v
                 closest = u
 
         MST.append([v, closest, length])
+        pm_list.append([v,closest,length])
         odd_vert.remove(closest)
+    return pm_list
 
 def Christofides_Algorithm(dizionario_citta, dizionario_stazioni, Max_Axis, k):
     G= create_distance_dict(dizionario_citta)
@@ -1511,7 +1514,7 @@ def Christofides_Algorithm(dizionario_citta, dizionario_stazioni, Max_Axis, k):
     mst_graph= MinimumSpanningTree(dizionario_citta)
     # print("mst_graph: ", str(mst_graph))
     # Creo il plot
-    plt.draw_mst(dizionario_citta, Max_Axis, mst_graph)
+    plt.draw_mst(dizionario_citta, Max_Axis, mst_graph,0)
 
     nodi= list(dizionario_citta.keys())
     nodi.append(0)
@@ -1523,10 +1526,12 @@ def Christofides_Algorithm(dizionario_citta, dizionario_stazioni, Max_Axis, k):
     # 3) Creare il sottografo indotto dati i vertici di grado dispari trovati prima, da questo grafo, trovare il Perfect Matching di peso minimo
     # add minimum weight matching edges to MST, ovvero, confronto tutti i nodi dispari e cerco di collegarli con i nodi dispari con distanza minore
 
-    minimum_weight_matching(mst_graph,G,odd_degree_verteces)
+    pm_list= minimum_weight_matching(mst_graph,G,odd_degree_verteces)
+    #print("pm_list: " + str(pm_list))
+    plt.draw_mst(dizionario_citta, Max_Axis, pm_list,1)
     # print("mst_graph dopo: " + str(mst_graph))
     # Creo il plot
-
+    #plt.draw_mst(dizionario_citta, Max_Axis, mst_graph,1)
 
     # 4) n modo iterativo, 
 	# ∀ nodo v di grado >2, 

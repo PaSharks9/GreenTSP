@@ -2,9 +2,8 @@
 import random
 import time
 import math
-from Cliente import euclidean_distance,Cliente, soluzione_accettabile, calcola_costo, soluzione_accettabile_debug
+from Cliente import Cliente, soluzione_accettabile, calcola_costo
 from LocalSearch import two_opt
-from PlotGenerator import print_2_opt_arc_selected
 
 def simulated_annealing(dizionario_soluzione, dizionario_citta, dizionario_stazioni, G, k, Temperatura, decreaseT,Tfrozen, numero_iterazioni):
 
@@ -17,39 +16,29 @@ def simulated_annealing(dizionario_soluzione, dizionario_citta, dizionario_stazi
     distanza_soluzione_iniziale= dizionario_soluzione.get('distanza')
     tempo_totale_sol_iniziale= dizionario_soluzione.get('tempo_tot')
 
-    # Inizializzo le 3 soluzioni di riferimento
-    # soluzione_precedente= soluzione_iniziale
+    # Inizializzo le 2 soluzioni di riferimento
     soluzione_corrente= soluzione_iniziale
     soluzione_migliore= soluzione_corrente
 
     # Inizializzo i 3 costi di riferimento
-    # costo_soluzione_precedente= tempo_totale_sol_iniziale
+
     costo_soluzione_corrente= tempo_totale_sol_iniziale
     costo_soluzione_migliore= costo_soluzione_corrente
 
     # Inizializzo le 3 distanze totali percorse di riferimento
     distanza_percorsa_soluzione_corrente= distanza_soluzione_iniziale
     distanza_percorsa_migliore= distanza_soluzione_iniziale
-    # distanza_percorsa_precedente= distanza_soluzione_iniziale
+
 
     Temperature= Temperatura
     
-    # Iterazione_fallimento serve per cercare di raggiungere una situazione stabile entro Iterazione//2, altrimenti si ripristina lo stato precedente(temperatura e soluzioni) e si riparte
-    # iterazione_fallimento= 0
-
     j= 0 # parametro per salvare la chiave del numero delle soluzioni di evoluzione
 
     start_esecuzione= time.time()
     while Temperature > Tfrozen:
 
-        """check_time= time.time() - start_esecuzione
-
-        if iterazione_fallimento == numero_iterazioni //2 and check_time < 1200:
-            # Ripristino la temperatura allo stato precedente
-            Temperature = Temperature * decreaseT"""
-
         iteration= 0
-        # iterazione_fallimento= 0
+
         # Cercare un numero di iterazioni per considerarsi in equilibrio
         while iteration < numero_iterazioni:  
             print("iterazione: " + str(iteration))
@@ -62,13 +51,6 @@ def simulated_annealing(dizionario_soluzione, dizionario_citta, dizionario_stazi
 
             if delta_E <= 0:
                 
-                # Siccome ho un miglioramento con la nuova soluzione rispetto a quella corrente, aggiorno le soluzioni
-
-                # La soluzione corrente diventa quella precedente ( serve tenerne traccia per le condizioni di stabilita )
-                """soluzione_precedente= soluzione_corrente
-                costo_soluzione_precedente= costo_soluzione_corrente
-                distanza_percorsa_precedente= distanza_percorsa_soluzione_corrente"""
-
                 # La nuova soluzione trovata diventa quella corrente
                 soluzione_precedente= soluzione_corrente
                 costo_soluzione_precedente= costo_soluzione_corrente
@@ -124,7 +106,6 @@ def simulated_annealing(dizionario_soluzione, dizionario_citta, dizionario_stazi
 
             
             iteration += 1
-            # !!!!!!!!!Valutare se togliere questa cosa o no, va contro all'idea di ammissibilità di soluzione peggiorativa per evitare gli ottimi locali!!!!!!!!!!
              
             # Uscito dal controllo sul deltaE, controllo se sono nel caso per verificare la correttezza della soluzione        
             # Per aver raggiunto l'equilibrio la soluzione corrente deve essere ammissibile, quindi devo fare un controllo sull'ammissibilità della soluzione, altrimenti continuo a rimanere nel ciclo

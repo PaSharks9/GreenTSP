@@ -1,7 +1,7 @@
 import random
 import sys
 import time
-from Cliente import euclidean_distance, Cliente, calcola_costo
+from Cliente import euclidean_distance, Cliente, calcola_costo, soluzione_accettabile
 from LocalSearch import local_search_2_otp
 
 # Crea le sottosequenze su cui effettuare la local search
@@ -31,58 +31,116 @@ def spli_tour(percorso):
 
     return dizionario_sottopercorsi
 
-def acceptance_test(tour1, tour2, tempo_tot1,tempo_tot2, error_tolerance):
-    if tour1 != tour2:
-        if tempo_tot1 > tempo_tot2:
-            return 1
+
+def scegli_sottopercorsi(dizionario_sottopercorsi, n_sottopercorsi):
+    if n_sottopercorsi > 1:
+        nSpercorso1= random.randint(0,n_sottopercorsi)
+    else:
+        nSpercorso1= 0
+
+    #print("dizionario sotto_p: " + str(dizionario_sottopercorsi))
+
+    nSpercorso2= random.randint(0,n_sottopercorsi)
+    while nSpercorso2 == nSpercorso1:
+        nSpercorso2= random.randint(0,n_sottopercorsi)
+
+
+    sPercorso1= dizionario_sottopercorsi[nSpercorso1]
+    sPercorso2= dizionario_sottopercorsi[nSpercorso2]
+
+    return sPercorso1,sPercorso2, nSpercorso1, nSpercorso2
+
+def perturbazione(percorso,G,k,dizionario_citta,dizionario_stazioni):
+    dizionario_sottopercorsi= spli_tour(percorso)
+
+    n_sottopercorsi= len(dizionario_sottopercorsi) - 1
+
+    sPercorso1,sPercorso2, nSpercorso1, nSpercorso2= scegli_sottopercorsi(dizionario_sottopercorsi, n_sottopercorsi)
+
+    #print("sPercorso1 before: " + str(sPercorso1))
+    #print("sPercorso2 before: " + str(sPercorso2))
+    len_sottopercorso1= len(sPercorso1)
+    len_sottopercorso2= len(sPercorso2)
+
+    while len_sottopercorso1 == len_sottopercorso2 == 2:
+        sPercorso1,sPercorso2, nSpercorso1, nSpercorso2= scegli_sottopercorsi(dizionario_sottopercorsi, n_sottopercorsi)
+
+    if len_sottopercorso1 == 2 and len_sottopercorso2 > 2:  # caso in cui sp1= ['1s','2s'] sp2= ['1s',1,3,..,'4s']
+        if  len_sottopercorso2 == 3:
+            index_nodeSP2= 1
         else:
+            index_nodeSP2= random.randint(1,len_sottopercorso2-2)
+
+        sPercorso1.insert(1,sPercorso2[index_nodeSP2])
+        sPercorso2.pop(index_nodeSP2)
+
+    elif len_sottopercorso1 > 2 and len_sottopercorso2 == 2:
+
+        if len_sottopercorso1 == 3:
+            index_nodeSP1= 1
+        else:
+            index_nodeSP1= random.randint(1,len_sottopercorso1-2)
+
+        sPercorso2.insert(1,sPercorso1[index_nodeSP1])
+        sPercorso1.pop(index_nodeSP1)
+    
+    else:
+
+        if len_sottopercorso1 == 3:
+            index_nodeSP1 = 1
+        else:
+            index_nodeSP1= random.randint(1,len_sottopercorso1-2)
+
+        
+        if len_sottopercorso2 == 3:
+            index_nodeSP2= 1
+        else:
+            index_nodeSP2= random.randint(1,len_sottopercorso2-2)
+
+        nodo_appoggio= sPercorso1[index_nodeSP1]
+        sPercorso1[index_nodeSP1]= sPercorso2[index_nodeSP2]
+        sPercorso2[index_nodeSP2]= nodo_appoggio
+
+
+    tour= []
+    for key in list(dizionario_sottopercorsi.keys()):
+        if key == nSpercorso1:
+            if key == 0:
+                tour= tour + sPercorso1
+            else:
+                tour= tour + sPercorso1[1:]
+        elif key == nSpercorso2:
+            if key == 0:
+                tour= tour + sPercorso2
+            else:
+                tour=tour + sPercorso2[1:]
+        else:
+            if key == 0:
+                tour=tour + dizionario_sottopercorsi[key]
+            else:
+                tour=tour + dizionario_sottopercorsi[key][1:]
+    
+    tempo_tot, _= calcola_costo(G, k, dizionario_citta, dizionario_stazioni, tour)
+   
+    return tour, tempo_tot
+
+def acceptance_test(tour1, tour2, tempo1, tempo2, error_tolerance):
+
+    if tour1 != tour2:
+        if tempo2 > tempo1:
             p= random.randint(0,10)
             if p < error_tolerance:
                 print("tolleranza errori")
+                print("p: " + str(p))
                 #time.sleep(1)
                 return 1
             else:
                 return 0
-
-def look_ahead(percorso,i,G,autonomia,dizionario_citta,dizionario_stazioni):
-    
-    if  i == 0:
-        if percorso[i] != 0:
-            stazione= percorso[i].replace('S','')
-            coordinate1= dizionario_stazioni[int(stazione)]
         else:
-            coordinate1= [0,0]
-
-        citta= dizionario_citta[i+1]
-        coordinate2= citta.coordinate
-
-        distanza1_2= euclidean_distance(coordinate1,coordinate2)
+            return 1
     else:
-    
-        citta1= int(percorso[i])
+        return 0
 
-        dizionario_distanze1= G[int(citta1)]
-        distanza1_2= dizionario_distanze1[int(percorso[i+1])]
-
-    autonomia_futura= autonomia-distanza1_2
-    #print("autonomia_futura: " + str(autonomia_futura))
-
-
-    if int(percorso[i+1]) != 0:
-        citta2= dizionario_citta[int(percorso[i+1])]
-        distanza_stazione= citta2.distanza_stazione
-
-        if autonomia_futura < distanza_stazione:
-            return True
-        else:
-            return False
-
-    else:
-
-        if autonomia_futura < 0:
-            return True
-        else:
-            return False
 
 def calcola_indice_max(percorso,autonomia,dizionario_citta,dizionario_stazioni):
     
@@ -159,9 +217,9 @@ def put_recharge_station(percorso,k,dizionario_citta,dizionario_stazioni):
     i= 0
 
     while i < len(new_percorso)-1:
-        print("nodo1: " + str(new_percorso[i]))
-        print("nodo2: " + str(new_percorso[i+1]))
-        print("autonomia: " + str(autonomia))
+        #print("nodo1: " + str(new_percorso[i]))
+        #print("nodo2: " + str(new_percorso[i+1]))
+        #print("autonomia: " + str(autonomia))
         if new_percorso[i] == 0:
             coordinate1= [0,0]
         elif 'S' in str(new_percorso[i]):
@@ -202,7 +260,7 @@ def put_recharge_station(percorso,k,dizionario_citta,dizionario_stazioni):
                     new_percorso.insert(i+1,stazione)
 
                     # siamo arrivati alla fine quindi una volta inserita l'ultima stazione posso restituire il nuovo percorso
-                print("new_percorso: " + str(new_percorso))
+                #print("new_percorso: " + str(new_percorso))
                 return new_percorso
             
             else:
@@ -231,7 +289,8 @@ def put_recharge_station(percorso,k,dizionario_citta,dizionario_stazioni):
     print("percorso: " + str(new_percorso))
     time.sleep(20)
 
-def perturbazione(percorso, G, k, dizionario_citta, dizionario_stazioni):
+# deprecato
+def perturbazione2(percorso, G, k, dizionario_citta, dizionario_stazioni):
 
     # Find stations
     indici_stazioni={}
@@ -250,7 +309,7 @@ def perturbazione(percorso, G, k, dizionario_citta, dizionario_stazioni):
 
     # Trovo indice_stazione precedente, se ce n'è uno
     indice_precedente= 0
-
+ 
     for indice in lista_indici:
         if indice < indice_stazione:
             indice_precedente= indice
@@ -329,12 +388,14 @@ def perturbazione(percorso, G, k, dizionario_citta, dizionario_stazioni):
     return new_final_tour, tempo_tot
 
 def iterative_local_search(percorso, tempo_tot_Percorso, G, k, dizionario_citta, dizionario_stazioni, n_iterazioni, error_tolerance): 
-    
     # 1) Soluzione iniziale x0 è percorso ed è la soluzione ottenuta dalle euristiche costruttive
 
 
     # 2) Calcolo il primo ottimo locale x*
     tour, tempo_tot= local_search_2_otp(percorso, tempo_tot_Percorso,  G, k, dizionario_citta, dizionario_stazioni)
+
+    best_tour= tour
+    best_tempo_tot= tempo_tot
 
     #3) Entro nel ciclo (quante volte ciclare?)
     for i in range(0,n_iterazioni+1):
@@ -348,21 +409,28 @@ def iterative_local_search(percorso, tempo_tot_Percorso, G, k, dizionario_citta,
         tour2, tempo_tot2= local_search_2_otp(tour1, tempo_tot1, G, k, dizionario_citta, dizionario_stazioni)
         # da local_search_2_otp esce sempre una soluzione accettabile, se nell'intorno generato di tour1 non ci sono soluzioni ammissibili , l'ottimo locale è tour1 e ritorna tour1
 
-        acceptance_flag= acceptance_test(tour,tour2,tempo_tot,tempo_tot2, error_tolerance)
+        acceptance_flag= acceptance_test(tour, tour2, tempo_tot, tempo_tot2, error_tolerance)
 
         # Se la soluzione passa il test di accettazione allora processo la nuova soluzione
         if acceptance_flag == 1:
             print("Tempo 1: " + str(tempo_tot))
             print("Tempo 2: " + str(tempo_tot2))
             #time.sleep(20)
+            # Se passo il test posso processare una soluzione diversa (che può essere peggiore)
             tour= tour2
             tempo_tot= tempo_tot2
+
+            # Se il tour2 è meglio del best_tempo aggiorno
+            if tempo_tot2 < best_tempo_tot:
+                best_tour= tour2
+                best_tempo_tot= tempo_tot2
+
 
 
     # Impacchetto il risultato
     dizionario_ILS= {}
-    dizionario_ILS['percorso']= tour
-    dizionario_ILS['tempo_tot']= tempo_tot
+    dizionario_ILS['percorso']= best_tour
+    dizionario_ILS['tempo_tot']= best_tempo_tot
     
     return dizionario_ILS
 
@@ -404,7 +472,13 @@ if __name__ == "__main__":
         i += 1
 
     percorso= [0, 9, 1, 6, 3, 2, 8, '3S', 7, 4, '1S', 5, 0]
-    
-    dizionario_ILS= iterative_local_search(percorso, 135.5, G, k, dizionario_citta, dizionario_stazioni)
 
-    print("percorso: " + str(dizionario_ILS['percorso']))
+    #percorso= [0,'1S', 9, 1, 6, 3, 2, 8, 7, 4, 5,  0]
+    #costo1= calcola_costo(G,k,dizionario_citta, dizionario_stazioni, percorso)
+    #dizionario_ILS= iterative_local_search(percorso, 135.5, G, k, dizionario_citta, dizionario_stazioni,1000,3)
+    tour= perturbazione(percorso,G,k,dizionario_citta,dizionario_stazioni)
+    #print("costo1: " + str(costo1))
+    #print("percorso: " + str(dizionario_ILS['percorso']))
+    #print("tempo_tot: " + str(dizionario_ILS['tempo_tot']))
+    #print("solAcc: "  + str(soluzione_accettabile(percorso, G, k, dizionario_citta, dizionario_stazioni)))
+    print("\ntour: " + str(tour)) 

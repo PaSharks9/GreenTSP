@@ -540,5 +540,5 @@ if __name__ == "__main__":
                     if scelta_salvataggio == 'y':
                         salva_risultati(dizionario_soluzioni, dizionario_dati)
 
-                    print("\n------------------------------------ Fine Iterative Local Search ----------------------------------------")
+                    print("\n------------------------------------ Fine Ite3rative Local Search ----------------------------------------")
                     print("\n------------------------------------ Fine Esecuzione Meta-Euristiche ------------------------------------")

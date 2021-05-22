@@ -359,6 +359,7 @@ def salva_risultati(dizionario_soluzioni, dizionario_dati):
 
 
     n_chiamate= list(dizionario_parametri_SA.keys())
+    print("n_chiamate: " + str(n_chiamate))
     # Se sono presenti parametri del SA procedo allo scapsulamento dei parametri , altrimenti vado avanti 
     if len(n_chiamate) > 0:
         flagSA = 1
@@ -461,12 +462,14 @@ def salva_risultati(dizionario_soluzioni, dizionario_dati):
                 f.write("\n Soluzioni Migliori: ")
                 for esecuzione in n_esecuzioni:
                     dizionario_Evoluzione_Soluzioni_NN= dizionario_evoluzione[esecuzione]
+                    #print("dizionario_Evoluzione_Soluzioni_NN: " + str(dizionario_Evoluzione_Soluzioni_NN))
                     f.write("\n----------------------------------------------------------------------------")
                     f.write("\nEsecuzione: " + str(esecuzione) + "\n")
 
                     chiavi= list(dizionario_Evoluzione_Soluzioni_NN.keys())
                     for chiave in chiavi:
                         valori= dizionario_Evoluzione_Soluzioni_NN[chiave]
+                        
                         f.write("\n" + str(chiave) + ") ")
                         f.write("\n Soluzione migliore precedente: " + str(valori[0]))
                         f.write("\n Costo Soluzione migliore precedente: " + str(valori[1]))
@@ -515,21 +518,25 @@ def salva_risultati(dizionario_soluzioni, dizionario_dati):
                 f.write("\n Soluzioni Migliori: ")
                 for esecuzione in n_esecuzioni:
                     dizionario_Evoluzione_Soluzioni_C= dizionario_evoluzione[esecuzione]
-                    
+                    #print("dizionario_Evoluzione_soluzioni_C " + str(dizionario_Evoluzione_Soluzioni_C))
                     f.write("\n----------------------------------------------------------------------------")
                     f.write("\nEsecuzione: " + str(esecuzione) + "\n")
 
                     chiavi= list(dizionario_Evoluzione_Soluzioni_C.keys())
-                    for chiave in chiavi:
+                    for chiave in chiavi:               #0                  1                          2                    3                           4                       5                           6      7                8
+                        # dizionario_sol_migliori[j]= [soluzione_migliore, costo_soluzione_migliore, soluzione_corrente, costo_soluzione_corrente, soluzione_precedente, costo_soluzione_precedente, Temperature, iteration, archi_scelti]
                         valori= dizionario_Evoluzione_Soluzioni_C[chiave]
                         f.write("\n" + str(chiave) + ") ")
-                        f.write("\n Soluzione precedente: " + str(valori[0]))
-                        f.write("\n Costo Soluzione precedente: " + str(valori[1]))
-                        f.write("\n Soluzione migliore: " + str(valori[2]))
-                        f.write("\n Costo Soluzione migliore: " + str(valori[3]))
-                        f.write("\n Temperatura: " + str(valori[4]))
-                        f.write("\n Iterazione: " + str(valori[5]))
-                        f.write("\n archi_scelti: " + str(valori[6]))
+                        f.write("\n Soluzione migliore precedente: " + str(valori[0]))
+                        f.write("\n Costo Soluzione migliore precedente: " + str(valori[1]))
+                        f.write("\n -------------------------------------------------------")
+                        f.write("\n Soluzione Corrente: " + str(valori[4]))
+                        f.write("\n Costo soluzione corrente: " + str(valori[5]))
+                        f.write("\n archi_scelti: " + str(valori[8]))
+                        f.write("\n Nuova soluzione migliore: " + str(valori[2]))
+                        f.write("\n Costo nuova soluzione migliore: " + str(valori[3]))
+                        f.write("\n Temperatura: " + str(valori[6]))
+                        f.write("\n Iterazione: " + str(valori[7]))
                     f.write("\n----------------------------------------------------------------------------")
 
             f.close()
@@ -592,7 +599,7 @@ def salva_risultati(dizionario_soluzioni, dizionario_dati):
             f.write("\n\n Percorso: " + str(dizionario_ILS_NN['percorso']))
             f.write("\nTempo Totale Percorrenza: " + str(dizionario_ILS_NN['tempo_tot']))
             f.write("\nTempo Esecuzione Algoritmo: " + str(dizionario_ILS_NN['execution_time']))
-            plt.draw_map(dizionario_ILS_NN['percorso'], dizionario_citta, dizionario_stazioni, Max_Axis, "IterativeLocalSearch/NearestNeighbour/NN" + str(chiamata) + ".jpg")
+            plt.draw_map(dizionario_ILS_NN['percorso'], dizionario_citta, dizionario_stazioni, Max_Axis, "IterativeLocalSearch/NearestNeighbour/NN.jpg")
 
         else:
             f.write("\n\n Esecuzione ILS partendo dalla soluzione di una Nearest Neighbour non effettuata \n\n")
@@ -607,7 +614,7 @@ def salva_risultati(dizionario_soluzioni, dizionario_dati):
             f.write("\n\n Percorso: " + str(dizionario_ILS_C['percorso']))
             f.write("\nTempo Totale Percorrenza: " + str(dizionario_ILS_C['tempo_tot']))
             f.write("\nTempo Esecuzione Algoritmo: " + str(dizionario_ILS_C['execution_time']))
-            plt.draw_map(dizionario_ILS_C['percorso'], dizionario_citta, dizionario_stazioni, Max_Axis, "IterativeLocalSearch/Christofides/C" + str(chiamata) + ".jpg")
+            plt.draw_map(dizionario_ILS_C['percorso'], dizionario_citta, dizionario_stazioni, Max_Axis, "IterativeLocalSearch/Christofides/C.jpg")
         else:
             f.write("\n\n Esecuzione ILS partendo dalla soluzione di Christofides non effettuata \n\n")
 
